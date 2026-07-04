@@ -18,10 +18,24 @@ ctx.imageSmoothingEnabled = false;
 
 const ASSET_LIST = [
   ...['samuel', 'yossi'].flatMap(w =>
-    ['idle', 'run1', 'run2', 'jump', 'slash', 'shoot', 'throw'].map(p => `${w}_${p}`)),
+    ['idle', 'run1', 'run2', 'jump', 'slash', 'shoot', 'throw',
+     'slash2', 'slash3', 'crouch', 'roll', 'flip', 'climb', 'victory']
+      .map(p => `${w}_${p}`)),
   ...Object.keys(TYPES), 'boss_alhambra', 'boss_cusco',
   'bg_granada', 'bg_alhambra', 'bg_cusco', 'bg_sweden', 'bg_sunset',
+  'tile_granada', 'tile_cusco', 'tile_sweden',
 ];
+
+// if a fancy pose is missing, fall back to a basic one (never pink boxes)
+const SPRITE_FALLBACKS = {
+  slash2: 'slash', slash3: 'slash', crouch: 'idle', roll: 'jump',
+  flip: 'jump', climb: 'idle', victory: 'idle',
+};
+function applyFallbacks() {
+  for (const w of ['samuel', 'yossi'])
+    for (const [pose, fb] of Object.entries(SPRITE_FALLBACKS))
+      if (!images[`${w}_${pose}`]) images[`${w}_${pose}`] = images[`${w}_${fb}`];
+}
 
 // ---------------- game state ----------------
 const game = {
@@ -370,6 +384,7 @@ let last = performance.now();
 let assetsReady = false;
 
 loadImages(ASSET_LIST).then(() => {
+  applyFallbacks();
   assetsReady = true;
   const q = new URLSearchParams(location.search);
   if (q.has('test')) runSmokeTest();

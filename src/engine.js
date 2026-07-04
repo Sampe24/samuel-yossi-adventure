@@ -182,14 +182,29 @@ export function drawLadders(ctx, level) {
 }
 
 export function drawPlatforms(ctx, level) {
+  const tile = level.tile && images[level.tile];
   for (const p of level.platforms) {
     const sx = p.x - camera.x;
     if (sx > W || sx + p.w < 0) continue;
-    ctx.fillStyle = level.platColor;
-    ctx.fillRect(sx, p.y, p.w, p.h);
-    ctx.fillStyle = 'rgba(255,255,255,.22)';
-    ctx.fillRect(sx, p.y, p.w, 4);
-    ctx.strokeStyle = 'rgba(0,0,0,.4)';
-    ctx.strokeRect(sx + .5, p.y + .5, p.w - 1, p.h - 1);
+    if (tile) {
+      // themed ledge sprite (rooftop / stone terrace / wooden ledge)
+      const th = 38;                       // drawn height, slight overhang on top
+      const s = th / tile.height;
+      const tw = tile.width * s;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(sx - 4, p.y - 14, p.w + 8, th + 6);
+      ctx.clip();
+      for (let x = sx - 4; x < sx + p.w + 4; x += tw)
+        ctx.drawImage(tile, x, p.y - 14, tw, th);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = level.platColor;
+      ctx.fillRect(sx, p.y, p.w, p.h);
+      ctx.fillStyle = 'rgba(255,255,255,.22)';
+      ctx.fillRect(sx, p.y, p.w, 4);
+      ctx.strokeStyle = 'rgba(0,0,0,.4)';
+      ctx.strokeRect(sx + .5, p.y + .5, p.w - 1, p.h - 1);
+    }
   }
 }

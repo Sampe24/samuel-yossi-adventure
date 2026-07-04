@@ -38,7 +38,9 @@ export function drawEnding(ctx, e) {
   const gy = H - 60;
   for (const c of [e.sam, e.yos]) {
     const walkFrame = c.walking && Math.floor(e.t * 8) % 2;
-    const name = c.walking ? `${c.who}_run${walkFrame ? 1 : 2}` : `${c.who}_idle`;
+    const celebrating = e.arrived && e.t - e.arrived > 12;   // fists up at the ❤ line
+    const name = c.walking ? `${c.who}_run${walkFrame ? 1 : 2}`
+               : celebrating ? `${c.who}_victory` : `${c.who}_idle`;
     // silhouette-ish: darkened sprites in the sunset
     ctx.save();
     ctx.filter = 'brightness(0.5) saturate(0.7)';

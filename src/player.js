@@ -138,7 +138,8 @@ export function doSlash(p, game) {
   const finisher = p.combo >= 3;
   p.comboT = .7;
   p.swordCd = finisher ? .55 : .26;
-  p.action = 'slash'; p.actionT = finisher ? .34 : .24;
+  p.action = finisher ? 'slash3' : p.combo === 2 ? 'slash2' : 'slash';
+  p.actionT = finisher ? .34 : .24;
   sfx.slash(finisher);
   const range = finisher ? 92 : 62;
   const hb = { x: p.facing > 0 ? p.x + p.w - 6 : p.x - range + 6,
@@ -177,12 +178,11 @@ export function hurtPlayer(p, dmg, game) {
 const RUN_FPS = 9;
 
 export function playerSprite(p) {
-  if (p.action === 'roll') return `${p.who}_jump`;
-  if (p.climbing) return `${p.who}_idle`;
-  if (p.action === 'slash') return `${p.who}_slash`;
-  if (p.action === 'shoot') return `${p.who}_shoot`;
-  if (p.action === 'throw') return `${p.who}_throw`;
-  if (!p.onGround) return `${p.who}_jump`;
+  if (p.action === 'roll') return `${p.who}_roll`;
+  if (p.climbing) return `${p.who}_climb`;
+  if (p.action) return `${p.who}_${p.action}`;   // slash|slash2|slash3|shoot|throw
+  if (p.low) return `${p.who}_crouch`;
+  if (!p.onGround) return p.jumps >= 2 ? `${p.who}_flip` : `${p.who}_jump`;
   if (Math.abs(p.vx) > 10)
     return Math.floor(p.animTimer * RUN_FPS) % 2 ? `${p.who}_run1` : `${p.who}_run2`;
   return `${p.who}_idle`;
@@ -201,10 +201,16 @@ export function drawPlayer(ctx, p) {
             ? Math.sin(p.animTimer * 18) * 2 : 0;
   let hgt = 86, rot = 0;
   if (p.action === 'roll') {
-    hgt = 64;
+    hgt = 58;
     rot = Math.PI * 2 * (p.rollT > 0 ? 1 - p.rollT / .38 : (p.animTimer * 2.6) % 1);
   } else if (p.low) {
-    hgt = 58;                                  // crouching: squash the sprite
+    hgt = 56;                                  // crouch sprite is naturally low
+  } else if (p.action === 'slash3') {
+    hgt = 104;                                 // overhead finisher: sword above head
+  } else if (p.climbing) {
+    hgt = 96;
+  } else if (!p.onGround && p.jumps >= 2) {
+    hgt = 78;                                  // somersault flip
   }
   drawSprite(ctx, playerSprite(p), p.x + p.w / 2, p.y + p.h + 2 + bob, hgt, p.facing,
              blink ? .35 : 1, rot);

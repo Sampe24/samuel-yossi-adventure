@@ -1,11 +1,11 @@
-// Level definitions: 3 levels + boss arenas. x positions in world pixels.
+﻿// Level definitions: 3 levels + boss arenas. x positions in world pixels.
 
 export const LEVELS = [
   {
     id: 'granada',
     name: 'LEVEL 1 — GRANADA',
     subtitle: 'Fight through the old town to the Alhambra',
-    bg: 'bg_granada', music: 'granada',
+    bg: 'bg_granada', music: 'granada', tile: 'tile_granada',
     length: 5600,
     groundTop: '#c9a06a', groundBottom: '#8a6437', platColor: '#b98d55',
     platforms: [
@@ -50,7 +50,7 @@ export const LEVELS = [
     id: 'cusco',
     name: 'LEVEL 2 — CUSCO',
     subtitle: 'The ancient warriors of the Andes awaken',
-    bg: 'bg_cusco', music: 'cusco',
+    bg: 'bg_cusco', music: 'cusco', tile: 'tile_cusco',
     length: 6000,
     groundTop: '#9b8b70', groundBottom: '#5d5140', platColor: '#847661',
     platforms: [
@@ -97,7 +97,7 @@ export const LEVELS = [
     id: 'sweden',
     name: 'LEVEL 3 — SVERIGE',
     subtitle: 'Almost home... trolls in the midsummer woods',
-    bg: 'bg_sweden', music: 'sweden',
+    bg: 'bg_sweden', music: 'sweden', tile: 'tile_sweden',
     length: 5200,
     groundTop: '#6fa84e', groundBottom: '#3c5e2b', platColor: '#7d5a3a',
     platforms: [
