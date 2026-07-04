@@ -18,6 +18,7 @@ export function makePlayer(who, x = 100) {
     jumps: 0,                                // double-jump counter
     combo: 0, comboT: 0,                     // sword combo chain
     climbing: false,
+    squash: 0, respawnT: null,               // landing squash / respawn countdown
     dead: false, remote: false,
   };
 }
@@ -98,6 +99,7 @@ export function updatePlayer(p, dt, game, controlled) {
         p.action = 'roll'; p.actionT = .38;
         setLowBox(p, true);
         sfx.roll();
+        dust(p, game, 5);
       } else if (crouching) {
         setLowBox(p, true);                    // crouch: duck under shots
       } else {
@@ -106,8 +108,8 @@ export function updatePlayer(p, dt, game, controlled) {
       }
       // jump + double jump
       if (input.jump() && !crouching) {
-        if (p.onGround) { p.vy = -JUMP; p.jumps = 1; sfx.jump(); }
-        else if (p.jumps < 2) { p.vy = -JUMP * .88; p.jumps = 2; sfx.doubleJump(); }
+        if (p.onGround) { p.vy = -JUMP; p.jumps = 1; sfx.jump(); dust(p, game, 4); }
+        else if (p.jumps < 2) { p.vy = -JUMP * .88; p.jumps = 2; sfx.doubleJump(); dust(p, game, 6); }
       }
     }
 
@@ -116,7 +118,13 @@ export function updatePlayer(p, dt, game, controlled) {
     if (input.nade()  && p.nadeCd  <= 0 && p.rollT <= 0) doNade(p, game);
   }
 
+  const wasAir = !p.onGround, fallVy = p.vy;
   stepPhysics(p, dt, game.level.platforms, game.level.pits);
+  p.squash = Math.max(0, p.squash - dt);
+  if (wasAir && p.onGround && fallVy > 620) {          // hard landing: squash + dust
+    p.squash = .16;
+    dust(p, game, Math.min(10, 3 + fallVy / 200));
+  }
   if (p.onGround) p.jumps = 0;
   p.x = clamp(p.x, camera.x > 20 ? camera.x - 10 : 0, game.arena ? game.arenaMax : game.level.length - p.w);
 
@@ -130,6 +138,16 @@ export function updatePlayer(p, dt, game, controlled) {
 function pressedJumpOff(p) {
   // space always hops off a ladder ('w' is climb-up)
   return input.jump() && keys[' '];
+}
+
+function dust(p, game, n) {
+  for (let i = 0; i < n; i++)
+    game.particles.push({
+      x: p.x + p.w / 2 + (Math.random() - .5) * p.w,
+      y: p.y + p.h - 3,
+      vx: (Math.random() - .5) * 160, vy: -30 - Math.random() * 70,
+      t: .28 + Math.random() * .2, c: 'rgba(210,195,165,.85)', r: 3 + Math.random() * 3,
+    });
 }
 
 export function doSlash(p, game) {
@@ -212,6 +230,7 @@ export function drawPlayer(ctx, p) {
   } else if (!p.onGround && p.jumps >= 2) {
     hgt = 78;                                  // somersault flip
   }
+  if (p.squash > 0) hgt *= .78 + .22 * (1 - p.squash / .16);   // landing squash
   drawSprite(ctx, playerSprite(p), p.x + p.w / 2, p.y + p.h + 2 + bob, hgt, p.facing,
              blink ? .35 : 1, rot);
   // name tag

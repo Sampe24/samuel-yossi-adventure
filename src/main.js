@@ -46,7 +46,14 @@ const game = {
   boss: null, arena: false, arenaMax: 0,
   bannerT: 0, clearT: 0, isHost: true, myWho: 'samuel',
   paused: false, netTick: 0, ending: null,
+  freeze: 0,                    // hit-stop timer
+  popups: [],                   // floating combat/reward text
+  lives: 3, checkpointHit: false, displayScore: 0,
 };
+
+function addPopup(x, y, text, color = '#ffe9a8', big = false) {
+  game.popups.push({ x, y, text, color, big, t: 1.1, vy: -55 });
+}
 window.game = game;      // for debugging
 
 // ---------------- menu wiring ----------------
@@ -98,12 +105,14 @@ showMenu(true);
 
 // ---------------- level setup ----------------
 function startLevel(idx, solo) {
+  if (game.phase === 'title' || game.phase === 'gameover') game.lives = 3;
   game.levelIdx = idx;
   game.level = LEVELS[idx];
   game.phase = 'play';
   game.arena = false; game.boss = null;
   game.enemies = []; game.bullets = []; game.nades = [];
-  game.meleeHits = []; game.particles = [];
+  game.meleeHits = []; game.particles = []; game.popups = [];
+  game.checkpointHit = false; game.freeze = 0;
   camera.x = 0;
 
   const keepScore = game.me ? game.me.score : 0;
@@ -185,11 +194,15 @@ function explode(x, y) {
   if (game.boss && hit(game.boss)) damageBoss(4);
 }
 
-function damageEnemy(e, dmg) {
+function damageEnemy(e, dmg, melee = false) {
   e.hp -= dmg; e.hitFlash = .15;
+  if (melee) game.freeze = Math.max(game.freeze, dmg >= 6 ? .11 : .05);  // hit-stop
+  addPopup(e.x + e.w / 2, e.y - 8, `${dmg}`, dmg >= 6 ? '#ff8830' : '#fff');
+  if (dmg >= 6) addPopup(e.x + e.w / 2, e.y - 34, 'FINISHER!', '#ffd24a', true);
   if (e.hp <= 0) {
     sfx.enemyDie();
     game.me.score += e.score;
+    addPopup(e.x + e.w / 2, e.y - 22, `+${e.score}`, '#8fe98f', true);
     spark(e.x + e.w / 2, e.y + e.h / 2, '#fff');
     if (Math.random() < .28) {
       const type = ['ammo', 'ammo', 'nade', 'heart'][Math.floor(Math.random() * 4)];
@@ -243,9 +256,13 @@ function updateCombat(dt) {
     m.t -= dt;
     if (game.isHost) {
       for (const e of game.enemies) if (e.hp > 0 && !m.hitIds?.includes(e.id) && overlap(m, e)) {
-        (m.hitIds = m.hitIds || []).push(e.id); damageEnemy(e, m.dmg);
+        (m.hitIds = m.hitIds || []).push(e.id); damageEnemy(e, m.dmg, true);
       }
-      if (game.boss && !m.hitBoss && overlap(m, game.boss)) { m.hitBoss = true; damageBoss(m.dmg); }
+      if (game.boss && !m.hitBoss && overlap(m, game.boss)) {
+        m.hitBoss = true;
+        game.freeze = Math.max(game.freeze, m.dmg >= 6 ? .11 : .05);
+        damageBoss(m.dmg);
+      }
     }
   }
   game.meleeHits = game.meleeHits.filter(m => m.t > 0);
@@ -284,9 +301,9 @@ function updateCombat(dt) {
       for (const p of game.players) {
         if (p.dead || !overlap(k, p)) continue;
         k.got = true; sfx.pickup();
-        if (k.type === 'ammo') p.ammo = Math.min(99, p.ammo + 12);
-        if (k.type === 'nade') p.nades = Math.min(9, p.nades + 2);
-        if (k.type === 'heart') p.hp = Math.min(MAX_HP, p.hp + 2);
+        if (k.type === 'ammo') { p.ammo = Math.min(99, p.ammo + 12); addPopup(k.x + 13, k.y - 8, '+12 AMMO'); }
+        if (k.type === 'nade') { p.nades = Math.min(9, p.nades + 2); addPopup(k.x + 13, k.y - 8, '+2 NADES', '#9be07d'); }
+        if (k.type === 'heart') { p.hp = Math.min(MAX_HP, p.hp + 2); addPopup(k.x + 13, k.y - 8, '+1 ♥', '#ff7d7d'); }
         break;
       }
     }
@@ -484,6 +501,18 @@ requestAnimationFrame(frame);
 let prevAction = null, prevAmmo = 0, prevNades = 0;
 
 function update(dt) {
+  // hit-stop: freeze the world for a few frames on heavy hits
+  if (game.freeze > 0 && ['play', 'boss'].includes(game.phase)) {
+    game.freeze -= dt;
+    return;
+  }
+  // floating popups always animate
+  for (const pop of game.popups) { pop.y += pop.vy * dt; pop.t -= dt; }
+  game.popups = game.popups.filter(p => p.t > 0);
+  // eased score display
+  game.displayScore += (Math.max(0, (game.me?.score ?? 0)) - game.displayScore) *
+                       Math.min(1, dt * 6);
+
   switch (game.phase) {
     case 'title': break;
 
@@ -504,13 +533,21 @@ function update(dt) {
       netUpdate(dt);
       updateCamera(game.me, game.level.length, dt);
 
+      // checkpoint flag
+      if (!game.checkpointHit && game.level.checkpoint &&
+          game.me.x > game.level.checkpoint) {
+        game.checkpointHit = true;
+        sfx.pickup();
+        addPopup(game.me.x + 20, game.me.y - 30, 'CHECKPOINT!', '#8fe98f', true);
+      }
+
       // reach end of level?
       if (game.isHost && game.me.x > game.level.length - 260) {
         if (game.level.boss) enterBossArena();
         else if (game.levelIdx === 2) startEnding();
         else levelCleared();
       }
-      checkDead();
+      checkDead(dt);
       break;
     }
 
@@ -531,7 +568,7 @@ function update(dt) {
       updateCombat(dt);
       netUpdate(dt);
       camera.x = 0;
-      checkDead();
+      checkDead(dt);
       break;
     }
 
@@ -577,11 +614,27 @@ function recordEvents(before) {
       game.myEvents.push({ e: 'slash', x: p.x, y: p.y, f: p.facing });
 }
 
-function checkDead() {
-  const allDead = game.players.every(p => p.dead || (p.companion && false));
-  if (game.isHost && game.me.dead &&
+function checkDead(dt) {
+  const p = game.me;
+  if (p.dead) {
+    if (p.respawnT === null && game.lives > 0) {         // spend a life
+      game.lives--;
+      p.respawnT = 1.3;
+      addPopup(p.x + p.w / 2, p.y - 20, game.lives > 0 ? `${game.lives} LIVES LEFT` : 'LAST CHANCE!',
+               '#ff7d7d', true);
+    } else if (p.respawnT !== null && (p.respawnT -= dt) <= 0) {
+      p.respawnT = null;
+      p.dead = false; p.hp = MAX_HP; p.inv = 2.5; p.vy = 0; p.climbing = false;
+      p.x = game.arena ? 90
+          : game.checkpointHit && game.level.checkpoint ? game.level.checkpoint - 60 : 80;
+      p.y = 200;
+      return;
+    }
+  }
+  const meStuckDead = p.dead && game.lives <= 0 && p.respawnT === null;
+  if (game.isHost && meStuckDead &&
       (net.role === 'solo' ? true : (game.other.dead || !net.connected))) gameOver();
-  else if (!game.isHost && game.me.dead && game.other.dead) gameOver();
+  else if (!game.isHost && meStuckDead && game.other.dead) gameOver();
 }
 
 // ---------------- rendering ----------------
@@ -605,6 +658,22 @@ function render() {
   drawGround(ctx, game.level);
   drawPlatforms(ctx, game.level);
   drawLadders(ctx, game.level);
+
+  // checkpoint flag
+  if (!game.arena && game.level.checkpoint) {
+    const fx = game.level.checkpoint - camera.x;
+    if (fx > -50 && fx < W + 50) {
+      ctx.fillStyle = '#5a4630';
+      ctx.fillRect(fx - 3, GROUND_Y - 96, 6, 96);
+      const wave = Math.sin(performance.now() / 250) * 4;
+      ctx.fillStyle = game.checkpointHit ? '#8fe98f' : '#c0392b';
+      ctx.beginPath();
+      ctx.moveTo(fx + 3, GROUND_Y - 94);
+      ctx.lineTo(fx + 42 + wave, GROUND_Y - 82);
+      ctx.lineTo(fx + 3, GROUND_Y - 68);
+      ctx.fill();
+    }
+  }
 
   // pickups
   for (const k of game.pickups) {
@@ -663,6 +732,19 @@ function render() {
   }
   ctx.globalAlpha = 1;
 
+  // floating popups (damage numbers, rewards)
+  for (const pop of game.popups) {
+    ctx.globalAlpha = Math.min(1, pop.t * 1.6);
+    ctx.font = pop.big ? 'bold 20px monospace' : 'bold 14px monospace';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,.8)';
+    ctx.lineWidth = 3;
+    ctx.strokeText(pop.text, pop.x - camera.x, pop.y);
+    ctx.fillStyle = pop.color;
+    ctx.fillText(pop.text, pop.x - camera.x, pop.y);
+  }
+  ctx.globalAlpha = 1;
+
   drawHUD();
 
   if (game.boss && ['boss', 'bossintro'].includes(game.phase)) drawBossBar(ctx, game.boss);
@@ -714,26 +796,36 @@ function drawHUD() {
   const p = game.me;
   if (!p) return;
   ctx.save();
-  // hearts
+  // hearts — pulse when low on hp
+  const low = p.hp <= 2 && !p.dead;
+  const pulse = low ? 1 + Math.sin(performance.now() / 130) * .18 : 1;
   for (let i = 0; i < MAX_HP / 2; i++) {
     const hx = 26 + i * 30, hy = 26;
     const fill = p.hp >= (i + 1) * 2 ? 1 : p.hp === i * 2 + 1 ? .5 : 0;
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.scale(pulse, pulse);
+    ctx.translate(-hx, -hy);
     drawHeart(hx, hy, '#3a1020');
     if (fill) {
       ctx.save();
       ctx.beginPath(); ctx.rect(hx - 14, hy - 14, 28 * fill, 30); ctx.clip();
-      drawHeart(hx, hy, '#e3312f');
+      drawHeart(hx, hy, low ? '#ff5a45' : '#e3312f');
       ctx.restore();
     }
+    ctx.restore();
   }
-  // ammo / grenades / score
+  // lives
   ctx.font = 'bold 16px monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = '#ffd76a';
+  ctx.fillText(`x${game.lives}`, 26 + (MAX_HP / 2) * 30 + 4, 32);
+  // ammo / grenades / score
   ctx.fillStyle = '#000a'; ctx.fillRect(16, 44, 190, 52);
   ctx.fillStyle = '#ffe9a8';
   ctx.fillText(`AMMO ${p.ammo}`, 26, 64);
   ctx.fillText(`NADE ${p.nades}`, 26, 86);
   ctx.fillStyle = '#9ecbff';
-  ctx.fillText(`SCORE ${p.score}`, 116, 64);
+  ctx.fillText(`SCORE ${Math.round(game.displayScore)}`, 116, 64);
   ctx.fillStyle = '#8a86b8';
   ctx.font = '12px monospace';
   ctx.fillText(net.role === 'solo' ? 'SOLO+AI' : net.connected ? 'ONLINE' : 'OFFLINE?', 116, 86);
