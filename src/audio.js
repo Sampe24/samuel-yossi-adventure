@@ -177,7 +177,11 @@ function schedule() {
 // ---------------- SFX ----------------
 export const sfx = {
   jump()    { ctx(); blip('square', 320, ac.currentTime, .15, .18, master, 300); },
-  slash()   { ctx(); noiseBurst(ac.currentTime, .09, .25, 2500); blip('square', 900, ac.currentTime, .06, .1, master, -500); },
+  doubleJump() { ctx(); blip('square', 420, ac.currentTime, .1, .16, master, 380);
+                 blip('square', 620, ac.currentTime + .06, .1, .14, master, 300); },
+  roll()    { ctx(); noiseBurst(ac.currentTime, .16, .14, 500); blip('triangle', 220, ac.currentTime, .16, .12, master, -120); },
+  slash(finisher) { ctx(); noiseBurst(ac.currentTime, finisher ? .16 : .09, finisher ? .35 : .25, 2500);
+                    blip('square', finisher ? 600 : 900, ac.currentTime, finisher ? .12 : .06, finisher ? .16 : .1, master, -500); },
   shoot()   { ctx(); blip('square', 1100, ac.currentTime, .08, .16, master, -800); noiseBurst(ac.currentTime, .04, .12, 3000); },
   boom()    { ctx(); noiseBurst(ac.currentTime, .5, .5, 60); blip('sine', 90, ac.currentTime, .4, .5, master, -60); },
   hurt()    { ctx(); blip('sawtooth', 200, ac.currentTime, .2, .25, master, -120); },

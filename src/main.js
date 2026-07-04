@@ -1,8 +1,8 @@
 // Samuel & Yossi: A 2D Adventure — main game loop and state machine.
 
 import { W, H, GROUND_Y, loadImages, images, camera, updateCamera, clearPressed,
-         pressed, keys, overlap, drawSprite, drawBackground, drawGround,
-         drawPlatforms, clamp } from './engine.js';
+         pressed, keys, input, overlap, drawSprite, drawBackground, drawGround,
+         drawPlatforms, drawLadders, clamp } from './engine.js';
 import { makePlayer, updatePlayer, updateCompanion, hurtPlayer, drawPlayer,
          playerSprite, doSlash, doShoot, doNade, MAX_HP } from './player.js';
 import { makeEnemy, updateEnemy, drawEnemy, makeBoss, updateBoss, drawBoss,
@@ -124,7 +124,8 @@ function enterBossArena() {
   game.bannerT = 2.5;
   game.arena = true; game.arenaMax = W - 60;
   // swap to arena scene
-  game.level = { ...game.level, bg: bossCfg.bg, length: W, platforms: [
+  game.level = { ...game.level, bg: bossCfg.bg, length: W,
+    pits: [], ladders: [], platforms: [
     { x: 120, y: 360, w: 150, h: 20 }, { x: W - 270, y: 360, w: 150, h: 20 }] };
   camera.x = 0;
   for (const p of game.players) { p.x = clamp(p.x, 60, 160); }
@@ -144,6 +145,7 @@ function levelCleared() {
 }
 
 window.debugEnding = () => startEnding();
+window.debugPress = k => { pressed[k] = true; };
 function startEnding() {
   game.phase = 'ending';
   game.ending = makeEnding(game);
@@ -257,8 +259,11 @@ function updateCombat(dt) {
     if (game.boss && game.boss.state !== 'enter')
       for (const p of game.players)
         if (!p.dead && overlap(game.boss, p)) hurtPlayer(p, 2, game);
-    // dead enemies removed
-    game.enemies = game.enemies.filter(e => e.hp > 0);
+    // dead or pit-fallen enemies removed
+    game.enemies = game.enemies.filter(e => {
+      if (e.y > H + 200) { game.me.score += Math.floor(e.score / 2); return false; }
+      return e.hp > 0;
+    });
     // pickups
     for (const k of game.pickups) {
       if (k.got) continue;
@@ -332,10 +337,12 @@ function netUpdate(dt) {
       game.bullets = wld.bu.map(b => ({ ...b, h: b.w > 20 ? 18 : 6, vx: 0, vy: 0, life: 1,
                                         from: b.fr, dmg: 0 }));
       game.pickups = wld.pk.map(k => ({ ...k, type: k.ty, w: 26, h: 26 }));
-      // own hp decided by host
-      if (wld.ghp < game.me.hp) { sfx.hurt(); game.me.inv = 1.2; camera.shake = 6; }
-      game.me.hp = wld.ghp;
-      if (game.me.hp <= 0) game.me.dead = true;
+      // own hp decided by host (unless we died locally, e.g. pit fall)
+      if (!game.me.dead) {
+        if (wld.ghp < game.me.hp) { sfx.hurt(); game.me.inv = 1.2; camera.shake = 6; }
+        game.me.hp = wld.ghp;
+        if (game.me.hp <= 0) game.me.dead = true;
+      }
       // phase transitions driven by host
       if (wld.ph !== game.phase && ['bossintro', 'boss', 'clear', 'gameover', 'ending', 'play'].includes(wld.ph)) {
         syncPhase(wld.ph, wld.li);
@@ -416,15 +423,25 @@ function runSmokeTest() {
   const iv = setInterval(() => {
     ticks++;
     pressed['j'] = true; pressed['w'] = ticks % 3 === 0; pressed['l'] = ticks % 5 === 0;
-    if (game.me) { game.me.inv = 2; game.me.ammo = 99; game.me.nades = 9; }
+    keys['s'] = ticks % 7 === 3;                       // exercise roll/crouch too
+    if (game.phase === 'gameover') { pressed['enter'] = true; log('retrying after death'); }
+    if (game.me) {
+      game.me.inv = 2; game.me.ammo = 99; game.me.nades = 9;
+      if (game.me.dead) {                        // revive after pit falls
+        game.me.dead = false; game.me.hp = 8;
+        game.me.y = 200; game.me.vy = 0; log('revived after fall');
+      }
+    }
     // simulate 1 second of game time regardless of rAF throttling
     try {
       for (let i = 0; i < 60; i++) update(1 / 60);
     } catch (e) { log('ERR update ' + e.message + ' ' + (e.stack || '').split('\n')[1]); }
     log(`t${ticks} phase=${game.phase} lvl=${game.levelIdx} x=${game.me ? Math.round(game.me.x) : '-'} ` +
         `enemies=${game.enemies.length} boss=${game.boss ? Math.ceil(game.boss.hp) : '-'} hp=${game.me ? game.me.hp : '-'}`);
-    if (game.phase === 'play' && ticks % 5 === 4 && game.me)
+    if (game.phase === 'play' && ticks % 5 === 4 && game.me) {
       game.me.x = game.level.length - 320;             // fast-forward to level end
+      game.me.y = 200; game.me.vy = 0;
+    }
     if (game.boss && game.boss.hp > 6) game.boss.hp = 6;  // shorten boss fights
     if (game.phase === 'ending') { pressed['enter'] = false; }
     if (ticks >= 45 || (game.ending && game.ending.t > 3)) {
@@ -572,6 +589,7 @@ function render() {
   drawBackground(ctx, game.level.bg, game.arena ? 0 : 0.35);
   drawGround(ctx, game.level);
   drawPlatforms(ctx, game.level);
+  drawLadders(ctx, game.level);
 
   // pickups
   for (const k of game.pickups) {

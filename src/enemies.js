@@ -1,6 +1,6 @@
 // Enemy definitions, AI, and the two bosses.
 
-import { GROUND_Y, stepPhysics, drawSprite, camera, W, dist } from './engine.js';
+import { GROUND_Y, stepPhysics, overPit, drawSprite, camera, W, dist } from './engine.js';
 import { sfx } from './audio.js';
 
 export const TYPES = {
@@ -41,17 +41,23 @@ export function updateEnemy(e, dt, game) {
   switch (e.ai) {
     case 'patrol':
       if (p && Math.abs(dx) < 340) e.facing = Math.sign(dx) || -1;
+      // don't walk off pit edges
+      if (e.onGround && overPit({ x: e.x + e.facing * 46, w: e.w }, game.level.pits))
+        e.facing *= -1;
       e.vx = e.facing * e.spd * (p && Math.abs(dx) < 340 ? 1.6 : 1);
       if (e.x < 30) e.facing = 1;
-      stepPhysics(e, dt, game.level.platforms);
+      stepPhysics(e, dt, game.level.platforms, game.level.pits);
       break;
     case 'chase':
       if (p) {
         e.facing = Math.sign(dx) || 1;
         e.vx = e.facing * e.spd;
         if (e.onGround && p.y + p.h < e.y - 30 && Math.random() < .02) e.vy = -750;
+        // leap across pits recklessly (they may fall in!)
+        if (e.onGround && overPit({ x: e.x + e.facing * 50, w: e.w }, game.level.pits))
+          e.vy = -820;
       }
-      stepPhysics(e, dt, game.level.platforms);
+      stepPhysics(e, dt, game.level.platforms, game.level.pits);
       break;
     case 'flyer': {
       // hover around baseY, swoop at player periodically
@@ -75,7 +81,9 @@ export function updateEnemy(e, dt, game) {
       if (p) e.facing = Math.sign(dx) || 1;
       e.vx = p && Math.abs(dx) > 420 ? e.facing * Math.max(e.spd, 40)
            : p && Math.abs(dx) < 180 ? -e.facing * Math.max(e.spd, 40) : 0;
-      stepPhysics(e, dt, game.level.platforms);
+      if (e.onGround && e.vx &&
+          overPit({ x: e.x + Math.sign(e.vx) * 46, w: e.w }, game.level.pits)) e.vx = 0;
+      stepPhysics(e, dt, game.level.platforms, game.level.pits);
       if (p && Math.abs(dx) < 560 && e.atkCd <= 0 && game.isHost) {
         e.atkCd = 2.2;
         game.bullets.push({

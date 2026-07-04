@@ -1,6 +1,6 @@
 // Player character: movement, sword / gun / grenade combat.
 
-import { GROUND_Y, stepPhysics, drawSprite, camera, W, input, clamp } from './engine.js';
+import { GROUND_Y, H, stepPhysics, drawSprite, camera, W, input, keys, clamp } from './engine.js';
 import { sfx } from './audio.js';
 
 export const MAX_HP = 8;
@@ -12,40 +12,139 @@ export function makePlayer(who, x = 100) {
     vx: 0, vy: 0, facing: 1, onGround: true,
     hp: MAX_HP, ammo: 30, nades: 3, score: 0,
     inv: 0,                                  // invulnerability timer
-    animTimer: 0, action: null, actionT: 0,  // action: slash|shoot|throw
+    animTimer: 0, action: null, actionT: 0,  // action: slash|shoot|throw|roll
     swordCd: 0, gunCd: 0, nadeCd: 0,
+    rollT: 0, rollCd: 0, low: false,         // roll / crouch state
+    jumps: 0,                                // double-jump counter
+    combo: 0, comboT: 0,                     // sword combo chain
+    climbing: false,
     dead: false, remote: false,
   };
 }
 
+// Shrink/restore the hitbox for crouching and rolling.
+function setLowBox(p, on) {
+  if (on && !p.low) { p.low = true; p.y += 22; p.h = 42; }
+  else if (!on && p.low) { p.low = false; p.y -= 22; p.h = 64; }
+}
+
+function findLadder(p, ladders) {
+  if (!ladders) return null;
+  const cx = p.x + p.w / 2;
+  return ladders.find(l => cx > l.x - 8 && cx < l.x + l.w + 8 &&
+                           p.y + p.h > l.y + 4 && p.y < l.y + l.h) || null;
+}
+
 export function updatePlayer(p, dt, game, controlled) {
   if (p.dead) return;
-  const SPEED = 300, JUMP = 880;
+  const SPEED = 300, JUMP = 880, ROLL_SPEED = 540, CLIMB_SPEED = 190;
 
   p.inv = Math.max(0, p.inv - dt);
-  p.swordCd -= dt; p.gunCd -= dt; p.nadeCd -= dt;
+  p.swordCd -= dt; p.gunCd -= dt; p.nadeCd -= dt; p.rollCd -= dt;
+  p.comboT = Math.max(0, p.comboT - dt);
+  if (p.comboT <= 0) p.combo = 0;
   p.animTimer += dt;
   if (p.action && (p.actionT -= dt) <= 0) p.action = null;
 
   if (controlled) {
-    p.vx = 0;
-    if (input.left())  { p.vx = -SPEED; p.facing = -1; }
-    if (input.right()) { p.vx =  SPEED; p.facing =  1; }
-    if (input.jump() && p.onGround) { p.vy = -JUMP; sfx.jump(); }
-    if (input.sword() && p.swordCd <= 0) doSlash(p, game);
-    if (input.gun()   && p.gunCd   <= 0) doShoot(p, game);
-    if (input.nade()  && p.nadeCd  <= 0) doNade(p, game);
+    const dir = input.left() ? -1 : input.right() ? 1 : 0;
+    const lad = findLadder(p, game.level.ladders);
+
+    // ---- ladder climbing ----
+    if (p.climbing) {
+      if (!lad) { p.climbing = false; }
+      else {
+        setLowBox(p, false);
+        p.vx = 0; p.vy = 0;
+        if (input.up())   p.y -= CLIMB_SPEED * dt;
+        if (input.down()) p.y += CLIMB_SPEED * dt;
+        p.x += (lad.x + lad.w / 2 - (p.x + p.w / 2)) * Math.min(1, dt * 12);
+        if (p.y + p.h <= lad.y + 2) {           // reached the top
+          p.y = lad.y - p.h; p.climbing = false; p.onGround = true; p.jumps = 0;
+        } else if (p.y + p.h >= GROUND_Y) {     // reached the bottom
+          p.y = GROUND_Y - p.h; p.climbing = false; p.onGround = true; p.jumps = 0;
+        }
+        if (pressedJumpOff(p)) { p.climbing = false; p.vy = -JUMP * .75; sfx.jump(); }
+        if (input.sword() && p.swordCd <= 0) doSlash(p, game);
+        p.animTimer += dt;
+        return;   // no gravity while climbing
+      }
+    }
+
+    // grab a ladder: up while overlapping, or down at its top edge
+    if (!p.climbing && lad && p.rollT <= 0) {
+      const atTop = p.onGround && Math.abs(p.y + p.h - lad.y) < 8;
+      if ((input.up() && p.y + p.h > lad.y + 12) || (input.down() && atTop)) {
+        setLowBox(p, false);
+        p.climbing = true;
+        p.y = Math.max(p.y, lad.y - p.h + (atTop ? 14 : 0));
+        p.vx = 0; p.vy = 0;
+        return;
+      }
+    }
+
+    // ---- roll (crouch + direction) ----
+    if (p.rollT > 0) {
+      p.rollT -= dt;
+      p.vx = p.facing * ROLL_SPEED;
+      p.inv = Math.max(p.inv, .06);           // i-frames while rolling
+      if (p.rollT <= 0) p.action = null;
+    } else {
+      p.vx = 0;
+      if (dir) p.facing = dir;
+      const crouching = input.down() && p.onGround;
+      if (crouching && dir && p.rollCd <= 0) {
+        p.rollT = .38; p.rollCd = .85;
+        p.action = 'roll'; p.actionT = .38;
+        setLowBox(p, true);
+        sfx.roll();
+      } else if (crouching) {
+        setLowBox(p, true);                    // crouch: duck under shots
+      } else {
+        setLowBox(p, false);
+        if (dir) p.vx = dir * SPEED;
+      }
+      // jump + double jump
+      if (input.jump() && !crouching) {
+        if (p.onGround) { p.vy = -JUMP; p.jumps = 1; sfx.jump(); }
+        else if (p.jumps < 2) { p.vy = -JUMP * .88; p.jumps = 2; sfx.doubleJump(); }
+      }
+    }
+
+    if (input.sword() && p.swordCd <= 0 && p.rollT <= 0) doSlash(p, game);
+    if (input.gun()   && p.gunCd   <= 0 && p.rollT <= 0) doShoot(p, game);
+    if (input.nade()  && p.nadeCd  <= 0 && p.rollT <= 0) doNade(p, game);
   }
 
-  stepPhysics(p, dt, game.level.platforms);
+  stepPhysics(p, dt, game.level.platforms, game.level.pits);
+  if (p.onGround) p.jumps = 0;
   p.x = clamp(p.x, camera.x > 20 ? camera.x - 10 : 0, game.arena ? game.arenaMax : game.level.length - p.w);
+
+  // fell into a pit
+  if (p.y > H + 60 && !p.dead) {
+    p.hp = 0; p.dead = true; p.climbing = false;
+    sfx.hurt(); camera.shake = 8;
+  }
+}
+
+function pressedJumpOff(p) {
+  // space always hops off a ladder ('w' is climb-up)
+  return input.jump() && keys[' '];
 }
 
 export function doSlash(p, game) {
-  p.swordCd = .35; p.action = 'slash'; p.actionT = .28;
-  sfx.slash();
-  const hb = { x: p.facing > 0 ? p.x + p.w - 6 : p.x - 56, y: p.y - 8, w: 62, h: p.h + 14 };
-  game.meleeHits.push({ ...hb, dmg: 3, owner: p, t: .12 });
+  // 3-hit combo: tap J repeatedly — 3rd hit is a wide, heavy finisher lunge
+  p.combo = p.comboT > 0 ? p.combo + 1 : 1;
+  const finisher = p.combo >= 3;
+  p.comboT = .7;
+  p.swordCd = finisher ? .55 : .26;
+  p.action = 'slash'; p.actionT = finisher ? .34 : .24;
+  sfx.slash(finisher);
+  const range = finisher ? 92 : 62;
+  const hb = { x: p.facing > 0 ? p.x + p.w - 6 : p.x - range + 6,
+               y: p.y - (finisher ? 20 : 8), w: range, h: p.h + (finisher ? 36 : 14) };
+  game.meleeHits.push({ ...hb, dmg: finisher ? 6 : 3, owner: p, t: .12 });
+  if (finisher) { p.vx = p.facing * 340; p.combo = 0; }
 }
 
 export function doShoot(p, game) {
@@ -78,6 +177,8 @@ export function hurtPlayer(p, dmg, game) {
 const RUN_FPS = 9;
 
 export function playerSprite(p) {
+  if (p.action === 'roll') return `${p.who}_jump`;
+  if (p.climbing) return `${p.who}_idle`;
   if (p.action === 'slash') return `${p.who}_slash`;
   if (p.action === 'shoot') return `${p.who}_shoot`;
   if (p.action === 'throw') return `${p.who}_throw`;
@@ -95,10 +196,18 @@ export function drawPlayer(ctx, p) {
     ctx.restore();
     return;
   }
-  const blink = p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0;
-  const bob = Math.abs(p.vx) > 10 && p.onGround ? Math.sin(p.animTimer * 18) * 2 : 0;
-  drawSprite(ctx, playerSprite(p), p.x + p.w / 2, p.y + p.h + 2 + bob, 86, p.facing,
-             blink ? .35 : 1);
+  const blink = p.inv > .1 && Math.floor(p.inv * 12) % 2 === 0;
+  const bob = Math.abs(p.vx) > 10 && p.onGround && p.rollT <= 0
+            ? Math.sin(p.animTimer * 18) * 2 : 0;
+  let hgt = 86, rot = 0;
+  if (p.action === 'roll') {
+    hgt = 64;
+    rot = Math.PI * 2 * (p.rollT > 0 ? 1 - p.rollT / .38 : (p.animTimer * 2.6) % 1);
+  } else if (p.low) {
+    hgt = 58;                                  // crouching: squash the sprite
+  }
+  drawSprite(ctx, playerSprite(p), p.x + p.w / 2, p.y + p.h + 2 + bob, hgt, p.facing,
+             blink ? .35 : 1, rot);
   // name tag
   ctx.font = 'bold 11px monospace';
   ctx.textAlign = 'center';
@@ -136,6 +245,7 @@ export function updateCompanion(c, dt, game) {
                           w: 12, h: 5, dmg: 1, from: 'player', life: 1.2 });
     }
   }
-  stepPhysics(c, dt, game.level.platforms);
-  if (c.hp <= 0) { c.hp = MAX_HP; c.inv = 2; c.x = lead.x - 60; c.y = lead.y - 40; } // respawn
+  stepPhysics(c, dt, game.level.platforms, game.level.pits);
+  if (c.y > H + 60) c.hp = 0;                                    // fell into a pit
+  if (c.hp <= 0) { c.hp = MAX_HP; c.inv = 2; c.x = lead.x - 60; c.y = lead.y - 40; c.vy = 0; } // respawn
 }

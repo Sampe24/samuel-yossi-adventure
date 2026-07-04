@@ -73,9 +73,11 @@ try {
     // run right for a while
     await evalIn(c, `window.__k = window.gameKeys`);
     await evalIn(c, `import('./src/engine.js').then(m => { m.keys['d']=true; m.keys['k']=true; })`);
-    await new Promise(r => setTimeout(r, 4000));
+    await new Promise(r => setTimeout(r, 2500));
     await shot(c, 'shot_granada.png');
-    await evalIn(c, `game.me.x = game.level.length - 300; game.me.inv = 5;`);
+    await evalIn(c, `if (game.phase==='gameover') window.debugPress('enter');`);
+    await new Promise(r => setTimeout(r, 300));
+    await evalIn(c, `game.me.x = game.level.length - 300; game.me.y = 200; game.me.vy = 0; game.me.inv = 5;`);
     await new Promise(r => setTimeout(r, 3500));
     await shot(c, 'shot_boss.png');
     // skip to cusco
