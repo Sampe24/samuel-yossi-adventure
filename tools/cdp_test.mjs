@@ -1,4 +1,4 @@
-// Drive two headless Chromes via CDP: host + guest PeerJS co-op test,
+﻿// Drive two headless Chromes via CDP: host + guest PeerJS co-op test,
 // with real time and real networking. Also captures gameplay screenshots.
 import { spawn } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
@@ -9,6 +9,8 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const code = 'T' + Math.floor(Math.random() * 9000 + 1000);
 const shotDir = process.argv[2] || '.';
 const mode = process.argv[3] || 'net';   // 'net' or 'solo'
+const BASE = process.argv[4] || 'http://localhost:8642/index.html';
+const MATCH = BASE.split('/')[2];
 
 function launch(port, url) {
   const dir = mkdtempSync(join(tmpdir(), 'chr-'));
@@ -24,7 +26,7 @@ async function attach(port) {
   for (let i = 0; i < 30; i++) {
     try {
       const list = await fetch(`http://127.0.0.1:${port}/json`).then(r => r.json());
-      const page = list.find(t => t.type === 'page' && t.url.includes('localhost:8642'));
+      const page = list.find(t => t.type === 'page' && t.url.includes(MATCH));
       if (page) {
         const ws = new WebSocket(page.webSocketDebuggerUrl);
         await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
@@ -61,7 +63,7 @@ const procs = [];
 try {
   if (mode === 'solo') {
     // Visual playthrough screenshots in real time.
-    procs.push(launch(9231, 'http://localhost:8642/index.html'));
+    procs.push(launch(9231, BASE));
     const c = await attach(9231);
     await c.cmd('Page.enable');
     await new Promise(r => setTimeout(r, 3500));
@@ -87,8 +89,8 @@ try {
     await shot(c, 'shot_ending.png');
     console.log('errlog:', await evalIn(c, `document.getElementById('errlog').textContent`));
   } else {
-    procs.push(launch(9231, `http://localhost:8642/index.html?autohost=${code}`));
-    procs.push(launch(9232, `http://localhost:8642/index.html?autojoin=${code}`));
+    procs.push(launch(9231, `${BASE}?autohost=${code}`));
+    procs.push(launch(9232, `${BASE}?autojoin=${code}`));
     const host = await attach(9231), guest = await attach(9232);
     await host.cmd('Page.enable'); await guest.cmd('Page.enable');
     console.log('testing with code', code);
