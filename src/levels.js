@@ -33,6 +33,14 @@ export const LEVELS = [
       { x: 1560, y: 330, w: 26, h: 140 },
       { x: 3360, y: 330, w: 26, h: 140 },
     ],
+    // ambient townsfolk (Arabic teashop) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 430 }, { set: 'pour', x: 560 },
+      { set: 'idle', x: 980, face: -1 },
+      { set: 'serve', x: 1650 }, { set: 'drink', x: 2150, face: -1 },
+      { set: 'wave', x: 3060 }, { set: 'clean', x: 3860, face: -1 },
+      { set: 'kettle', x: 5060 },
+    ],
     spawns: [
       { type: 'crusader', x: 800 },  { type: 'jihadist', x: 1080 },
       { type: 'crusader', x: 1600 }, { type: 'gargoyle', x: 1900 },
@@ -84,6 +92,14 @@ export const LEVELS = [
       { x: 2380, y: 350, w: 26, h: 120 },
       { x: 4160, y: 350, w: 26, h: 120 },
     ],
+    // ambient townsfolk (Peruvian food stand) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 470 }, { set: 'welcome', x: 620 },
+      { set: 'idle', x: 1000, face: -1 },
+      { set: 'serve', x: 1760 }, { set: 'cook', x: 2160, face: -1 },
+      { set: 'arrange', x: 2700 }, { set: 'eat', x: 3620 },
+      { set: 'wipe', x: 4310, face: -1 }, { set: 'idle', x: 5350 },
+    ],
     spawns: [
       { type: 'inca', x: 850 },   { type: 'supay', x: 1200 },
       { type: 'inca', x: 1700 },  { type: 'condor', x: 2000 },
@@ -134,6 +150,13 @@ export const LEVELS = [
     ladders: [
       { x: 1860, y: 330, w: 26, h: 140 },
       { x: 2960, y: 350, w: 26, h: 120 },
+    ],
+    // ambient townsfolk (Swedish woodworkers) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 470 }, { set: 'idle', x: 650, face: -1 },
+      { set: 'plan', x: 1020 }, { set: 'saw', x: 1660 },
+      { set: 'plane', x: 2260, face: -1 }, { set: 'hammer', x: 3120 },
+      { set: 'carry', x: 3560 }, { set: 'approve', x: 4620, face: -1 },
     ],
     spawns: [
       { type: 'troll', x: 900 },  { type: 'nacken', x: 1550 },

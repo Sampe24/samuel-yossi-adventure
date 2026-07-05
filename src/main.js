@@ -12,6 +12,7 @@ import { LEVELS } from './levels.js';
 import { playSong, stopMusic, sfx, unlockAudio } from './audio.js';
 import { net, hostGame, joinGame, send, playerPacket, worldPacket, closeNet } from './net.js';
 import { makeEnding, updateEnding, drawEnding } from './ending.js';
+import { npcAssetNames, drawNpcs } from './npcs.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -25,6 +26,7 @@ const ASSET_LIST = [
   ...Object.keys(TYPES), 'boss_alhambra', 'boss_cusco',
   'bg_granada', 'bg_alhambra', 'bg_cusco', 'bg_sweden', 'bg_sunset',
   'tile_granada', 'tile_cusco', 'tile_sweden',
+  ...npcAssetNames(),
 ];
 
 // if a fancy pose is missing, fall back to a basic one (never pink boxes)
@@ -697,6 +699,7 @@ function render() {
 
   drawBackground(ctx, game.level.bg, game.arena ? 0 : 0.35);
   drawGround(ctx, game.level);
+  if (!game.arena) drawNpcs(ctx, game.level, camera.x, W);
   drawPlatforms(ctx, game.level);
   drawLadders(ctx, game.level);
 
