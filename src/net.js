@@ -70,6 +70,7 @@ export function send(msg) {
 export function playerPacket(p, events) {
   return { t: 'p', x: Math.round(p.x), y: Math.round(p.y), f: p.facing,
            a: p.action, hp: p.hp, dead: p.dead, vx: p.vx, og: p.onGround,
+           gd: p.guarding, gt: Math.round((p.guardT ?? 9) * 100) / 100, lv: p.level,
            ev: events };
 }
 

@@ -36,7 +36,9 @@ export const input = {
   up:    () => keys['w'] || keys['arrowup'],
   down:  () => keys['s'] || keys['arrowdown'],
   sword: () => pressed['j'] || pressed['x'],
-  gun:   () => keys['k'] || keys['c'],
+  gunPress: () => pressed['k'] || pressed['c'],
+  gunHold:  () => keys['k'] || keys['c'],
+  guard: () => keys['h'] || keys['b'],
   nade:  () => pressed['l'] || pressed['v'],
   pause: () => pressed['p'],
 };

@@ -188,5 +188,10 @@ export const sfx = {
   enemyDie(){ ctx(); blip('square', 500, ac.currentTime, .2, .2, master, -420); noiseBurst(ac.currentTime, .12, .18, 900); },
   pickup()  { ctx(); blip('square', 660, ac.currentTime, .07, .18); blip('square', 990, ac.currentTime + .08, .1, .18); },
   bossRoar(){ ctx(); blip('sawtooth', 80, ac.currentTime, .7, .4, master, 60); noiseBurst(ac.currentTime, .5, .3, 200); },
+  guard()   { ctx(); blip('square', 240, ac.currentTime, .08, .2, master, -80); noiseBurst(ac.currentTime, .05, .1, 2000); },
+  parry()   { ctx(); blip('square', 880, ac.currentTime, .12, .22, master, 500); blip('square', 1320, ac.currentTime + .05, .1, .18); },
+  levelup() { ctx(); [392, 523, 659, 784, 1047].forEach((f, i) => blip('square', f, ac.currentTime + i * .09, .2, .2)); },
+  chargeShot(full) { ctx(); blip('sawtooth', full ? 300 : 500, ac.currentTime, .25, .3, master, -200);
+                     noiseBurst(ac.currentTime, .15, .25, 1500); },
   victory() { ctx(); [523, 659, 784, 1047].forEach((f, i) => blip('square', f, ac.currentTime + i * .13, .22, .2)); },
 };

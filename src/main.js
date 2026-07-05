@@ -4,7 +4,8 @@ import { W, H, GROUND_Y, loadImages, images, camera, updateCamera, clearPressed,
          pressed, keys, input, overlap, drawSprite, drawBackground, drawGround,
          drawPlatforms, drawLadders, clamp } from './engine.js';
 import { makePlayer, updatePlayer, updateCompanion, hurtPlayer, drawPlayer,
-         playerSprite, doSlash, doShoot, doNade, MAX_HP } from './player.js';
+         playerSprite, doSlash, doShoot, doNade, doChargedShot, MAX_HP,
+         grantXP, xpForNext } from './player.js';
 import { makeEnemy, updateEnemy, drawEnemy, makeBoss, updateBoss, drawBoss,
          drawBossBar, TYPES } from './enemies.js';
 import { LEVELS } from './levels.js';
@@ -29,7 +30,7 @@ const ASSET_LIST = [
 // if a fancy pose is missing, fall back to a basic one (never pink boxes)
 const SPRITE_FALLBACKS = {
   slash2: 'slash', slash3: 'slash', crouch: 'idle', roll: 'jump',
-  flip: 'jump', climb: 'idle', victory: 'idle',
+  flip: 'jump', climb: 'idle', victory: 'idle', spin: 'slash3',
 };
 function applyFallbacks() {
   for (const w of ['samuel', 'yossi'])
@@ -49,11 +50,13 @@ const game = {
   freeze: 0,                    // hit-stop timer
   popups: [],                   // floating combat/reward text
   lives: 3, checkpointHit: false, displayScore: 0,
+  skillBanner: null,            // {text, t} — level-up skill unlock banner
 };
 
 function addPopup(x, y, text, color = '#ffe9a8', big = false) {
   game.popups.push({ x, y, text, color, big, t: 1.1, vy: -55 });
 }
+game.addPopup = addPopup;      // so player.js can announce level-ups
 window.game = game;      // for debugging
 
 // ---------------- menu wiring ----------------
@@ -112,12 +115,12 @@ function startLevel(idx, solo) {
   game.arena = false; game.boss = null;
   game.enemies = []; game.bullets = []; game.nades = [];
   game.meleeHits = []; game.particles = []; game.popups = [];
-  game.checkpointHit = false; game.freeze = 0;
+  game.checkpointHit = false; game.freeze = 0; game.skillBanner = null;
   camera.x = 0;
 
-  const keepScore = game.me ? game.me.score : 0;
+  const keep = game.me ? { score: game.me.score, xp: game.me.xp, level: game.me.level } : null;
   game.me = makePlayer(game.myWho, 100);
-  game.me.score = keepScore;
+  if (keep) Object.assign(game.me, keep);
 
   const otherWho = game.myWho === 'samuel' ? 'yossi' : 'samuel';
   if (net.role === 'solo') {
@@ -202,6 +205,7 @@ function damageEnemy(e, dmg, melee = false) {
   if (e.hp <= 0) {
     sfx.enemyDie();
     game.me.score += e.score;
+    grantXP(game.me, e.score, game);
     addPopup(e.x + e.w / 2, e.y - 22, `+${e.score}`, '#8fe98f', true);
     spark(e.x + e.w / 2, e.y + e.h / 2, '#fff');
     if (Math.random() < .28) {
@@ -218,6 +222,7 @@ function damageBoss(dmg) {
   if (b.hp <= 0) {
     sfx.enemyDie(); sfx.boom();
     game.me.score += 2000;
+    grantXP(game.me, 2000, game);
     for (let i = 0; i < 5; i++)
       setTimeout(() => explode(b.x + b.w / 2 + (Math.random() - .5) * 120,
                                b.y + Math.random() * b.h), i * 180);
@@ -271,14 +276,35 @@ function updateCombat(dt) {
     // player bullets vs enemies / boss; enemy bullets vs players
     for (const b of game.bullets) {
       if (b.from === 'player') {
-        for (const e of game.enemies)
-          if (e.hp > 0 && overlap(b, e)) { damageEnemy(e, b.dmg); b.life = 0; spark(b.x, b.y, '#ffd24a'); break; }
+        for (const e of game.enemies) {
+          if (e.hp <= 0 || !overlap(b, e)) continue;
+          if (b.pierce) {          // charged shot: passes through, hits each once
+            if (!b.hitIds.includes(e.id)) {
+              b.hitIds.push(e.id); damageEnemy(e, b.dmg); spark(b.x, b.y, '#7fd8ff');
+            }
+          } else { damageEnemy(e, b.dmg); b.life = 0; spark(b.x, b.y, '#ffd24a'); break; }
+        }
         if (b.life > 0 && game.boss && overlap(b, game.boss)) {
-          damageBoss(b.dmg); b.life = 0; spark(b.x, b.y, '#ffd24a');
+          if (b.pierce) {
+            if (!b.hitBossP) { b.hitBossP = true; damageBoss(b.dmg); spark(b.x, b.y, '#7fd8ff'); }
+          } else { damageBoss(b.dmg); b.life = 0; spark(b.x, b.y, '#ffd24a'); }
         }
       } else {
-        for (const p of game.players)
-          if (!p.dead && p.inv <= 0 && overlap(b, p)) { hurtPlayer(p, b.dmg, game); b.life = 0; }
+        for (const p of game.players) {
+          if (p.dead || !overlap(b, p)) continue;
+          if (p.guarding) {
+            if (p.level >= 4 && p.guardT < .18) {        // PARRY: reflect the shot
+              b.from = 'player'; b.dmg = 2; b.color = '#7fd8ff';
+              b.vx = Math.max(420, Math.abs(b.vx)) * p.facing; b.vy = 0;
+              b.grav = false; b.wave = false; b.life = 1.4;
+              sfx.parry(); game.freeze = Math.max(game.freeze, .06);
+              addPopup(p.x + p.w / 2, p.y - 26, 'PARRY!', '#7fd8ff', true);
+            } else {                                      // blocked
+              b.life = 0; sfx.guard(); spark(b.x, b.y, '#ffd76a');
+            }
+          } else if (p.inv <= 0) { hurtPlayer(p, b.dmg, game); b.life = 0; }
+          break;
+        }
       }
     }
     // contact damage
@@ -292,7 +318,11 @@ function updateCombat(dt) {
         if (!p.dead && overlap(game.boss, p)) hurtPlayer(p, 2, game);
     // dead or pit-fallen enemies removed
     game.enemies = game.enemies.filter(e => {
-      if (e.y > H + 200) { game.me.score += Math.floor(e.score / 2); return false; }
+      if (e.y > H + 200) {
+        game.me.score += Math.floor(e.score / 2);
+        grantXP(game.me, Math.floor(e.score / 2), game);
+        return false;
+      }
       return e.hp > 0;
     });
     // pickups
@@ -334,6 +364,7 @@ function netUpdate(dt) {
     o.x += (r.x - o.x) * Math.min(1, dt * 14);
     o.y += (r.y - o.y) * Math.min(1, dt * 14);
     o.facing = r.f; o.action = r.a; o.dead = r.dead; o.vx = r.vx; o.onGround = r.og;
+    o.guarding = !!r.gd; o.guardT = r.gt ?? 9; o.level = r.lv || o.level;
     if (game.isHost) o.hpReported = r.hp;
     o.animTimer += dt;
   }
@@ -345,6 +376,7 @@ function netUpdate(dt) {
       o.x = ev.x; o.y = ev.y; o.facing = ev.f;
       if (ev.e === 'slash') doSlash(o, game);
       if (ev.e === 'shoot') { o.ammo = 99; doShoot(o, game); }
+      if (ev.e === 'cshot') { o.ammo = 99; o.chargeT = ev.ct || 1.1; doChargedShot(o, game); }
       if (ev.e === 'nade')  { o.nades = 9; doNade(o, game); }
     }
     net.guestEvents.length = 0;
@@ -455,7 +487,11 @@ function runSmokeTest() {
   const iv = setInterval(() => {
     ticks++;
     pressed['j'] = true; pressed['w'] = ticks % 3 === 0; pressed['l'] = ticks % 5 === 0;
+    pressed['k'] = ticks % 2 === 0;                    // tap-fire (charged shot at LV2+)
     keys['s'] = ticks % 7 === 3;                       // exercise roll/crouch too
+    keys['h'] = ticks % 6 === 5;                       // exercise guard too
+    if (ticks === 3 && game.me && game.me.level < 2)   // force an early level-up
+      grantXP(game.me, 1200, game);
     if (game.phase === 'gameover') { pressed['enter'] = true; log('retrying after death'); }
     if (game.me) {
       game.me.inv = 2; game.me.ammo = 99; game.me.nades = 9;
@@ -509,6 +545,7 @@ function update(dt) {
   // floating popups always animate
   for (const pop of game.popups) { pop.y += pop.vy * dt; pop.t -= dt; }
   game.popups = game.popups.filter(p => p.t > 0);
+  if (game.skillBanner && (game.skillBanner.t -= dt) <= 0) game.skillBanner = null;
   // eased score display
   game.displayScore += (Math.max(0, (game.me?.score ?? 0)) - game.displayScore) *
                        Math.min(1, dt * 6);
@@ -605,8 +642,12 @@ function recordEvents(before) {
   const p = game.me;
   if (p.action === 'slash' && before.sw > 0 !== p.swordCd > 0 && p.swordCd > before.sw)
     game.myEvents.push({ e: 'slash', x: p.x, y: p.y, f: p.facing });
-  if (p.ammo < before.ammo)
-    game.myEvents.push({ e: 'shoot', x: p.x, y: p.y, f: p.facing });
+  if (p.ammo < before.ammo) {
+    game.myEvents.push(p.lastShotCharged
+      ? { e: 'cshot', ct: p.chargeT, x: p.x, y: p.y, f: p.facing }
+      : { e: 'shoot', x: p.x, y: p.y, f: p.facing });
+    p.lastShotCharged = false;
+  }
   if (p.nades < before.nades)
     game.myEvents.push({ e: 'nade', x: p.x, y: p.y, f: p.facing });
   if (p.action === 'slash' && before.a !== 'slash')
@@ -747,6 +788,16 @@ function render() {
 
   drawHUD();
 
+  // skill-unlock banner
+  if (game.skillBanner && ['play', 'boss', 'bossintro'].includes(game.phase)) {
+    ctx.globalAlpha = Math.min(1, game.skillBanner.t);
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(W / 2 - 320, 84, 640, 42);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#7fd8ff'; ctx.font = 'bold 18px monospace';
+    ctx.fillText(game.skillBanner.text, W / 2, 111);
+    ctx.globalAlpha = 1;
+  }
+
   if (game.boss && ['boss', 'bossintro'].includes(game.phase)) drawBossBar(ctx, game.boss);
 
   // banners
@@ -819,8 +870,8 @@ function drawHUD() {
   ctx.font = 'bold 16px monospace'; ctx.textAlign = 'left';
   ctx.fillStyle = '#ffd76a';
   ctx.fillText(`x${game.lives}`, 26 + (MAX_HP / 2) * 30 + 4, 32);
-  // ammo / grenades / score
-  ctx.fillStyle = '#000a'; ctx.fillRect(16, 44, 190, 52);
+  // ammo / grenades / score / level + XP bar
+  ctx.fillStyle = '#000a'; ctx.fillRect(16, 44, 190, 74);
   ctx.fillStyle = '#ffe9a8';
   ctx.fillText(`AMMO ${p.ammo}`, 26, 64);
   ctx.fillText(`NADE ${p.nades}`, 26, 86);
@@ -829,6 +880,13 @@ function drawHUD() {
   ctx.fillStyle = '#8a86b8';
   ctx.font = '12px monospace';
   ctx.fillText(net.role === 'solo' ? 'SOLO+AI' : net.connected ? 'ONLINE' : 'OFFLINE?', 116, 86);
+  ctx.fillStyle = '#ffd24a'; ctx.font = 'bold 14px monospace';
+  ctx.fillText(`LV ${p.level}`, 26, 108);
+  const xpPrev = p.level === 1 ? 0 : xpForNext(p.level - 1);
+  const xpFrac = clamp((p.xp - xpPrev) / (xpForNext(p.level) - xpPrev), 0, 1);
+  ctx.fillStyle = '#2a2350'; ctx.fillRect(76, 98, 120, 10);
+  ctx.fillStyle = '#7fd8ff'; ctx.fillRect(76, 98, 120 * xpFrac, 10);
+  ctx.strokeStyle = '#555'; ctx.strokeRect(76.5, 98.5, 120, 10);
   // level tag
   ctx.textAlign = 'right'; ctx.font = 'bold 14px monospace';
   ctx.fillStyle = '#ffd76a';

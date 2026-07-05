@@ -20,6 +20,11 @@ export const LEVELS = [
       { x: 3520, y: 230, w: 150, h: 22 },
       { x: 4200, y: 350, w: 200, h: 22 },
       { x: 4460, y: 270, w: 150, h: 22 },   // spans pit 3
+      // high route (Sonic-style alternate path): rooftops with loot
+      { x: 1950, y: 210, w: 140, h: 22 },
+      { x: 2160, y: 250, w: 130, h: 22 },
+      { x: 3740, y: 210, w: 150, h: 22 },
+      { x: 3960, y: 250, w: 140, h: 22 },
     ],
     pits: [
       { x: 1190, w: 170 }, { x: 2620, w: 180 }, { x: 4470, w: 180 },
@@ -42,6 +47,7 @@ export const LEVELS = [
       { type: 'heart', x: 2420, py: 360 },{ type: 'ammo', x: 3360, py: 330 },
       { type: 'nade', x: 3580, py: 230 }, { type: 'ammo', x: 4260, py: 350 },
       { type: 'ammo', x: 5100 }, { type: 'heart', x: 5250 },
+      { type: 'heart', x: 2000, py: 210 }, { type: 'nade', x: 3790, py: 210 },  // high route
     ],
     boss: { type: 'boss_alhambra', bg: 'bg_alhambra', music: 'boss',
             intro: 'INSIDE THE ALHAMBRA...' },
@@ -65,6 +71,11 @@ export const LEVELS = [
       { x: 4100, y: 350, w: 200, h: 22 },   // ladder up here
       { x: 4680, y: 290, w: 170, h: 22 },   // spans pit 3
       { x: 4950, y: 340, w: 180, h: 22 },
+      // high route: upper terraces
+      { x: 1080, y: 230, w: 140, h: 22 },
+      { x: 1560, y: 250, w: 150, h: 22 },
+      { x: 2790, y: 220, w: 150, h: 22 },
+      { x: 3350, y: 230, w: 140, h: 22 },
     ],
     pits: [
       { x: 1360, w: 170 }, { x: 3050, w: 180 }, { x: 4700, w: 160 },
@@ -89,6 +100,7 @@ export const LEVELS = [
       { type: 'nade', x: 3880, py: 250 }, { type: 'ammo', x: 4180, py: 350 },
       { type: 'heart', x: 4740, py: 290 },{ type: 'ammo', x: 5500 },
       { type: 'heart', x: 5650 },
+      { type: 'ammo', x: 1130, py: 230 }, { type: 'heart', x: 2840, py: 220 },  // high route
     ],
     boss: { type: 'boss_cusco', bg: 'bg_cusco', music: 'boss',
             intro: 'THE PLAZA DE ARMAS TREMBLES...' },
@@ -110,6 +122,11 @@ export const LEVELS = [
       { x: 2900, y: 350, w: 210, h: 22 },
       { x: 3800, y: 330, w: 190, h: 22 },
       { x: 3940, y: 250, w: 160, h: 22 },   // spans pit 3
+      // high route: treetop path
+      { x: 2270, y: 210, w: 140, h: 22 },
+      { x: 2460, y: 260, w: 130, h: 22 },
+      { x: 3300, y: 260, w: 150, h: 22 },
+      { x: 3550, y: 220, w: 140, h: 22 },
     ],
     pits: [
       { x: 1250, w: 170 }, { x: 2650, w: 180 }, { x: 3960, w: 160 },
@@ -129,6 +146,7 @@ export const LEVELS = [
       { type: 'ammo', x: 1870, py: 330 }, { type: 'heart', x: 2080, py: 230 },
       { type: 'heart', x: 2950, py: 350 },{ type: 'ammo', x: 3870, py: 330 },
       { type: 'heart', x: 4600 },
+      { type: 'heart', x: 2320, py: 210 }, { type: 'ammo', x: 3600, py: 220 },  // high route
     ],
     boss: null,   // ends in the midsummer sunset instead
   },
