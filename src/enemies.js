@@ -36,6 +36,7 @@ export function makeEnemy(type, x, y = null) {
     baseY: y !== null ? y : GROUND_Y - h - 130,
     phase: Math.random() * Math.PI * 2,
     atkCd: 1 + Math.random(), hitFlash: 0, animT: Math.random() * 9,
+    lungeT: 0, lungeCd: 0,                  // contact-attack telegraph
   };
 }
 
@@ -44,7 +45,23 @@ export function updateEnemy(e, dt, game) {
   e.hitFlash = Math.max(0, e.hitFlash - dt);
   e.animT += dt;
   e.atkCd -= dt;
+  e.lungeCd = Math.max(0, e.lungeCd - dt);
   const dx = p ? p.x - e.x : 0;
+
+  // Contact telegraph: ground stalkers rear back and flash red for a beat
+  // just before closing to strike, so a hit reads as earned, not random.
+  if ((e.ai === 'patrol' || e.ai === 'chase') && p) {
+    const near = Math.abs(dx) < 104 &&
+                 Math.abs((p.y + p.h) - (e.y + e.h)) < 90;
+    if (e.lungeT > 0 || (near && e.lungeCd <= 0)) {
+      if (e.lungeT <= 0) { e.lungeT = .3; e.lungeCd = 1.3; }
+      e.lungeT -= dt;
+      e.facing = Math.sign(dx) || e.facing;
+      e.vx = -e.facing * 70;               // small rear-back away from player
+      stepPhysics(e, dt, game.level.platforms, game.level.pits);
+      return;                              // hold normal AI during the wind-up
+    }
+  }
 
   switch (e.ai) {
     case 'patrol':
@@ -116,8 +133,11 @@ function nearestPlayer(e, game) {
 
 export function drawEnemy(ctx, e) {
   const bob = e.ai === 'flyer' ? Math.sin(e.animT * 6) * 3 : 0;
+  // red pulse during the pre-strike wind-up telegraph
+  const tint = e.lungeT > 0
+    ? { color: '#ff2a1a', a: .35 + Math.sin(e.animT * 40) * .2 } : null;
   drawSprite(ctx, e.type, e.x + e.w / 2, e.y + e.h + 2 + bob, e.size,
-             e.facing, e.hitFlash > 0 ? .5 : 1);
+             e.facing, e.hitFlash > 0 ? .5 : 1, 0, tint);
   if (e.hp < TYPES[e.type].hp) {           // mini health bar
     const sx = e.x + e.w / 2 - camera.x;
     ctx.fillStyle = '#300'; ctx.fillRect(sx - 20, e.y - 12, 40, 5);

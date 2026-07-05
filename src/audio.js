@@ -138,6 +138,50 @@ S.ending = { bpm: 100, sub: 2,
          'c2',null,null,null,null,null,'c2',null,null,null,null,null,'g2',null,null,null,null,null,'g2',null,null,null,null,null],
   drums: new Array(48).fill(null) };
 
+// MADRID — proud paso-doble march in E major.
+S.madrid = { bpm: 150, sub: 2,
+  lead: ['e4',null,'e4',null,'b4',null,'g4',null,'a4',null,'b4',null,'e5',null,null,null,
+         'd5',null,'b4',null,'g4',null,'e4',null,'fs4',null,'a4',null,'b4',null,null,null],
+  harm: ['b3',null,null,null,'e4',null,null,null,'cs4',null,null,null,'b3',null,null,null,
+         'b3',null,null,null,'e4',null,null,null,'a3',null,null,null,'b3',null,null,null],
+  bass: ['e2',null,'e2',null,'b2',null,'b2',null,'a2',null,'a2',null,'e2',null,'e2',null,
+         'e2',null,'e2',null,'g2',null,'g2',null,'a2',null,'a2',null,'b2',null,'b2',null],
+  drums:['k',null,'h',null,'s',null,'h',null,'k',null,'h',null,'s',null,'h','h',
+         'k',null,'h',null,'s',null,'h',null,'k',null,'h',null,'s',null,'s','s'] };
+
+// SEVILLA — flamenco phrygian in E (E-F-G#-A), dramatic and slower.
+S.sevilla = { bpm: 128, sub: 2,
+  lead: ['e4',null,'f4',null,'e4',null,'d4',null,'c4',null,'b3',null,'c4',null,'d4',null,
+         'e4',null,'f4',null,'gs4',null,'a4',null,'gs4',null,'f4',null,'e4',null,null,null],
+  harm: ['e3',null,null,null,'e3',null,null,null,'f3',null,null,null,'f3',null,null,null,
+         'a3',null,null,null,'a3',null,null,null,'e3',null,null,null,'e3',null,null,null],
+  bass: ['e2',null,'e2',null,'e2',null,'e2',null,'f2',null,'f2',null,'c3',null,'c3',null,
+         'a2',null,'a2',null,'gs2',null,'gs2',null,'e2',null,'e2',null,'e2',null,null,null],
+  drums:['k',null,null,'s',null,null,'k',null,null,'s','s',null,'k',null,'s',null,
+         'k',null,null,'s',null,null,'k',null,null,'s','s',null,'k',null,'s','s'] };
+
+// LIMA — flowing A dorian, wistful coastal air (distinct from Cusco's pent).
+S.lima = { bpm: 120, sub: 2,
+  lead: ['a4',null,'b4',null,'c5',null,'e5',null,'d5',null,'b4',null,'a4',null,null,null,
+         'g4',null,'a4',null,'c5',null,'b4',null,'a4',null,'fs4',null,'g4',null,null,null],
+  harm: ['a3',null,null,null,'c4',null,null,null,'e4',null,null,null,'d4',null,null,null,
+         'g3',null,null,null,'b3',null,null,null,'d4',null,null,null,'g3',null,null,null],
+  bass: ['a2',null,'a2',null,'e2',null,'e2',null,'d2',null,'d2',null,'a2',null,'a2',null,
+         'g2',null,'g2',null,'d2',null,'d2',null,'a2',null,'a2',null,'a2',null,null,null],
+  drums:['k',null,null,'h','k',null,'h',null,'k',null,null,'h','k',null,'h',null,
+         'k',null,null,'h','k',null,'h',null,'k',null,'s',null,'k',null,'s','s'] };
+
+// JÖNKÖPING — warm, triumphant D-major folk: the "home at last" finale theme.
+S.jonkoping = { bpm: 140, sub: 2,
+  lead: ['d4',null,'fs4',null,'a4',null,'d5',null,'b4',null,'a4',null,'fs4',null,'d4',null,
+         'e4',null,'g4',null,'b4',null,'a4',null,'g4',null,'fs4',null,'e4',null,null,null],
+  harm: ['d4',null,null,null,'a3',null,null,null,'d4',null,null,null,'fs4',null,null,null,
+         'g3',null,null,null,'b3',null,null,null,'a3',null,null,null,'a3',null,null,null],
+  bass: ['d2',null,'d2',null,'a2',null,'a2',null,'d2',null,'d2',null,'d2',null,'d2',null,
+         'g2',null,'g2',null,'a2',null,'a2',null,'d2',null,'a2',null,'d2',null,null,null],
+  drums:['k',null,'h',null,'s',null,'h',null,'k',null,'h',null,'s',null,'h','h',
+         'k',null,'h',null,'s',null,'h',null,'k',null,'s',null,'s',null,'s','s'] };
+
 S.title = S.sweden;
 
 // ---------------- sequencer ----------------

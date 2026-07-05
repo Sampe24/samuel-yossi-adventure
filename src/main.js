@@ -824,6 +824,11 @@ function render() {
     if (game.phase === 'play') {
       ctx.fillStyle = '#dfd7ff'; ctx.font = 'italic 18px Georgia, serif';
       ctx.fillText(LEVELS[game.levelIdx].subtitle, W / 2, H / 2 + 26);
+      if (game.levelIdx === 0) {          // teach controls on the very first level
+        ctx.fillStyle = '#ffd76a'; ctx.font = 'bold 13px monospace';
+        ctx.fillText('MOVE A/D  ·  JUMP W  ·  SWORD J  ·  GUN K  ·  NADE L  ·  GUARD H',
+                     W / 2, H / 2 + 52);
+      }
     }
     ctx.globalAlpha = 1;
   }

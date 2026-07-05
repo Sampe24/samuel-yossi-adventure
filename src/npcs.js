@@ -71,7 +71,13 @@ export function drawNpcs(ctx, level, camX, viewW) {
     } else if (n.set !== 'stall') {
       h *= 1 + Math.sin(t * 3.2 + phase * 6.28) * 0.012; // breathing bob
     }
+    // Depth wash: dim + cool-blue tint so ambient townsfolk visibly recede
+    // behind the action and never read as a threat. Stalls stay a touch
+    // brighter since they're obviously scenery, not people.
+    const isStall = n.set === 'stall';
     drawSprite(ctx, `npc_${level.id}_${n.set}_${frame}`,
-               n.x, GROUND_Y + 2, h, n.face || 1);
+               n.x, GROUND_Y + 2, h, n.face || 1,
+               isStall ? 0.94 : 0.86, 0,
+               { color: '#26365f', a: isStall ? 0.14 : 0.28 });
   }
 }

@@ -64,7 +64,7 @@ export const LEVELS = [
     id: 'madrid',
     name: 'LEVEL 2 — MADRID',
     subtitle: 'Bulls and blades on the Plaza Mayor',
-    bg: 'bg_madrid', music: 'granada', tile: 'tile_madrid',
+    bg: 'bg_madrid', music: 'madrid', tile: 'tile_madrid',
     length: 5800, checkpoint: 3000,
     groundTop: '#b9a48a', groundBottom: '#7a6a52', platColor: '#a08a6a',
     platforms: [
@@ -123,7 +123,7 @@ export const LEVELS = [
     id: 'sevilla',
     name: 'LEVEL 3 — SEVILLA',
     subtitle: 'Bandoleros and duendes under the Giralda',
-    bg: 'bg_sevilla', music: 'granada', tile: 'tile_sevilla',
+    bg: 'bg_sevilla', music: 'sevilla', tile: 'tile_sevilla',
     length: 5800, checkpoint: 2950,
     groundTop: '#d8b98a', groundBottom: '#9a7a54', platColor: '#c49a68',
     platforms: [
@@ -243,7 +243,7 @@ export const LEVELS = [
     id: 'lima',
     name: 'LEVEL 5 — LIMA',
     subtitle: 'Ghost pirates haunt the Pacific coast',
-    bg: 'bg_lima', music: 'cusco', tile: 'tile_lima',
+    bg: 'bg_lima', music: 'lima', tile: 'tile_lima',
     length: 6000, checkpoint: 3400,
     groundTop: '#c9b896', groundBottom: '#8a7a5d', platColor: '#b0906a',
     platforms: [
@@ -357,7 +357,7 @@ export const LEVELS = [
     id: 'jonkoping',
     name: 'FINAL LEVEL — JÖNKÖPING',   // level 7
     subtitle: 'Home at last... but Lake Vättern is stirring',
-    bg: 'bg_jonkoping', music: 'sweden', tile: 'tile_jonkoping',
+    bg: 'bg_jonkoping', music: 'jonkoping', tile: 'tile_jonkoping',
     length: 5400, checkpoint: 2700,
     groundTop: '#8a9a6e', groundBottom: '#4c5e3b', platColor: '#8a7a5c',
     platforms: [

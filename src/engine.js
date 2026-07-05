@@ -93,7 +93,10 @@ export function updateCamera(target, levelLen, dt) {
 }
 
 // ---------- drawing ----------
-export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1, rot = 0) {
+// tint: optional { color, a } wash painted over the sprite's own pixels
+// (source-atop), used for the enemy telegraph flash and the NPC depth wash.
+export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1,
+                           rot = 0, tint = null) {
   const img = images[name];
   const sx = cx - camera.x + (camera.shake ? (Math.random() - .5) * camera.shake : 0);
   ctx.save();
@@ -103,7 +106,14 @@ export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1, r
     ctx.translate(sx, bottomY - (rot ? hgt / 2 : 0));
     if (rot) ctx.rotate(rot * facing);
     if (facing < 0) ctx.scale(-1, 1);
-    ctx.drawImage(img, -w / 2, rot ? -hgt / 2 : -hgt, w, hgt);
+    const dx = -w / 2, dy = rot ? -hgt / 2 : -hgt;
+    ctx.drawImage(img, dx, dy, w, hgt);
+    if (tint && tint.a > 0) {
+      ctx.globalCompositeOperation = 'source-atop';
+      ctx.globalAlpha = alpha * tint.a;
+      ctx.fillStyle = tint.color;
+      ctx.fillRect(dx, dy, w, hgt);
+    }
   } else {                       // fallback box if asset missing
     ctx.fillStyle = '#e055e0';
     ctx.fillRect(sx - 15, bottomY - hgt, 30, hgt);

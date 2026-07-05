@@ -46,6 +46,7 @@ export function makePlayer(who, x = 100) {
     swordCd: 0, gunCd: 0, nadeCd: 0,
     rollT: 0, rollCd: 0, low: false,         // roll / crouch state
     jumps: 0,                                // double-jump counter
+    coyoteT: 0, jumpBufT: 0,                 // coyote time + jump-input buffer
     combo: 0, comboT: 0,                     // sword combo chain
     climbing: false,
     squash: 0, respawnT: null,               // landing squash / respawn countdown
@@ -72,6 +73,7 @@ export function updatePlayer(p, dt, game, controlled) {
 
   p.inv = Math.max(0, p.inv - dt);
   p.swordCd -= dt; p.gunCd -= dt; p.nadeCd -= dt; p.rollCd -= dt;
+  p.jumpBufT = Math.max(0, p.jumpBufT - dt);
   p.comboT = Math.max(0, p.comboT - dt);
   if (p.comboT <= 0) p.combo = 0;
   p.animTimer += dt;
@@ -146,10 +148,20 @@ export function updatePlayer(p, dt, game, controlled) {
         setLowBox(p, false);
         if (dir) p.vx = dir * SPEED;
       }
-      // jump + double jump
-      if (input.jump() && !crouching) {
-        if (p.onGround) { p.vy = -JUMP; p.jumps = 1; sfx.jump(); dust(p, game, 4); }
-        else if (p.jumps < 2) { p.vy = -JUMP * .88; p.jumps = 2; sfx.doubleJump(); dust(p, game, 6); }
+      // jump + double jump, with input buffering + coyote time.
+      // Buffer the press (~0.12s) so a jump keyed just before landing still
+      // fires; coyoteT (~0.1s, set on leaving ground) lets a ground jump
+      // register just after walking off a ledge instead of eating the
+      // weaker double-jump.
+      if (input.jump() && !crouching) p.jumpBufT = .12;
+      if (p.jumpBufT > 0 && !crouching) {
+        if (p.onGround || p.coyoteT > 0) {
+          p.vy = -JUMP; p.jumps = 1; p.coyoteT = 0; p.jumpBufT = 0;
+          sfx.jump(); dust(p, game, 4);
+        } else if (p.jumps < 2) {
+          p.vy = -JUMP * .88; p.jumps = 2; p.jumpBufT = 0;
+          sfx.doubleJump(); dust(p, game, 6);
+        }
       }
     }
 
@@ -182,7 +194,8 @@ export function updatePlayer(p, dt, game, controlled) {
     p.squash = .16;
     dust(p, game, Math.min(10, 3 + fallVy / 200));
   }
-  if (p.onGround) p.jumps = 0;
+  if (p.onGround) { p.jumps = 0; p.coyoteT = .1; }
+  else p.coyoteT = Math.max(0, p.coyoteT - dt);
   p.x = clamp(p.x, camera.x > 20 ? camera.x - 10 : 0, game.arena ? game.arenaMax : game.level.length - p.w);
 
   // fell into a pit
