@@ -35,11 +35,11 @@ export const LEVELS = [
     ],
     // ambient townsfolk (Arabic teashop) drawn behind the action
     npcs: [
-      { set: 'stall', x: 430 }, { set: 'pour', x: 560 },
+      { set: 'stall', x: 430 }, { set: 'pour', x: 545 },
       { set: 'idle', x: 980, face: -1 },
-      { set: 'serve', x: 1650 }, { set: 'drink', x: 2150, face: -1 },
-      { set: 'wave', x: 3060 }, { set: 'clean', x: 3860, face: -1 },
-      { set: 'kettle', x: 5060 },
+      { set: 'serve', x: 1650 }, { set: 'wave', x: 2150, face: -1 },
+      { set: 'idle', x: 3060 }, { set: 'serve', x: 3860, face: -1 },
+      { set: 'wave', x: 5060 },
     ],
     spawns: [
       { type: 'crusader', x: 800 },  { type: 'jihadist', x: 1080 },
@@ -94,11 +94,11 @@ export const LEVELS = [
     ],
     // ambient townsfolk (Peruvian food stand) drawn behind the action
     npcs: [
-      { set: 'stall', x: 470 }, { set: 'welcome', x: 620 },
+      { set: 'stall', x: 470 }, { set: 'cook', x: 585 },
       { set: 'idle', x: 1000, face: -1 },
-      { set: 'serve', x: 1760 }, { set: 'cook', x: 2160, face: -1 },
-      { set: 'arrange', x: 2700 }, { set: 'eat', x: 3620 },
-      { set: 'wipe', x: 4310, face: -1 }, { set: 'idle', x: 5350 },
+      { set: 'serve', x: 1760 }, { set: 'wipe', x: 2160, face: -1 },
+      { set: 'cook', x: 2700 }, { set: 'serve', x: 3620 },
+      { set: 'idle', x: 4310, face: -1 }, { set: 'wipe', x: 5350 },
     ],
     spawns: [
       { type: 'inca', x: 850 },   { type: 'supay', x: 1200 },
@@ -153,10 +153,11 @@ export const LEVELS = [
     ],
     // ambient townsfolk (Swedish woodworkers) drawn behind the action
     npcs: [
-      { set: 'stall', x: 470 }, { set: 'idle', x: 650, face: -1 },
-      { set: 'plan', x: 1020 }, { set: 'saw', x: 1660 },
-      { set: 'plane', x: 2260, face: -1 }, { set: 'hammer', x: 3120 },
-      { set: 'carry', x: 3560 }, { set: 'approve', x: 4620, face: -1 },
+      { set: 'stall', x: 470 }, { set: 'man_hammer', x: 590 },
+      { set: 'woman_idle', x: 700, face: -1 },
+      { set: 'man_saw', x: 1020 }, { set: 'woman_plane', x: 1660 },
+      { set: 'man_carry', x: 2260 }, { set: 'woman_paint', x: 3120, face: -1 },
+      { set: 'man_idle', x: 3560 }, { set: 'woman_approve', x: 4620, face: -1 },
     ],
     spawns: [
       { type: 'troll', x: 900 },  { type: 'nacken', x: 1550 },

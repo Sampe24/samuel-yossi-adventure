@@ -8,22 +8,21 @@ import { GROUND_Y, drawSprite } from './engine.js';
 // frames per animation + draw height (player draws at ~86px)
 export const NPC_ANIMS = {
   granada: {
-    stall: { frames: 1, h: 118 }, idle:  { frames: 2, h: 88 },
-    pour:  { frames: 2, h: 90 },  serve: { frames: 2, h: 88 },
-    drink: { frames: 2, h: 88 },  wave:  { frames: 2, h: 88 },
-    clean: { frames: 2, h: 88 },  kettle:{ frames: 1, h: 94 },
+    stall: { frames: 1, h: 120 },
+    idle:  { frames: 2, h: 88 }, pour:  { frames: 2, h: 88 },
+    serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
   },
   cusco: {
-    stall: { frames: 1, h: 130 }, idle:   { frames: 2, h: 87 },
-    welcome:{ frames: 1, h: 92 }, serve:  { frames: 2, h: 87 },
-    cook:  { frames: 2, h: 92 },  arrange:{ frames: 2, h: 92 },
-    eat:   { frames: 2, h: 93 },  wipe:   { frames: 2, h: 86 },
+    stall: { frames: 1, h: 120 },
+    idle:  { frames: 2, h: 87 }, cook:  { frames: 2, h: 87 },
+    serve: { frames: 2, h: 87 }, wipe:  { frames: 2, h: 87 },
   },
   sweden: {
-    stall: { frames: 1, h: 112 }, idle:  { frames: 1, h: 96 },
-    plan:  { frames: 1, h: 100 }, saw:   { frames: 1, h: 100 },
-    plane: { frames: 1, h: 99 },  hammer:{ frames: 1, h: 100 },
-    carry: { frames: 1, h: 95 },  approve:{ frames: 1, h: 96 },
+    stall: { frames: 1, h: 115 },
+    man_idle:   { frames: 2, h: 90 }, man_saw:    { frames: 2, h: 90 },
+    man_hammer: { frames: 2, h: 90 }, man_carry:  { frames: 2, h: 90 },
+    woman_idle: { frames: 2, h: 88 }, woman_plane:{ frames: 2, h: 88 },
+    woman_paint:{ frames: 2, h: 88 }, woman_approve:{ frames: 2, h: 88 },
   },
 };
 
