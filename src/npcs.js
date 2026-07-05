@@ -29,6 +29,11 @@ export const NPC_ANIMS = {
     idle:  { frames: 2, h: 88 }, fry:   { frames: 2, h: 88 },
     serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
   },
+  sevilla: {
+    stall: { frames: 1, h: 120 },
+    idle:  { frames: 2, h: 88 }, juice: { frames: 2, h: 88 },
+    serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
+  },
   lima: {
     stall: { frames: 1, h: 120 },
     idle:  { frames: 2, h: 88 }, chop:  { frames: 2, h: 88 },

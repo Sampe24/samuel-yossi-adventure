@@ -19,6 +19,8 @@ export const TYPES = {
   pelicano:  { hp: 3, spd: 150, dmg: 1, size: 74,  ai: 'flyer',  score: 250 },
   vittra:    { hp: 6, spd: 180, dmg: 2, size: 84,  ai: 'chase',  score: 300 },
   huldra:    { hp: 5, spd: 50,  dmg: 1, size: 80,  ai: 'shooter',score: 300 },
+  bandolero: { hp: 5, spd: 60,  dmg: 2, size: 82,  ai: 'shooter',score: 250 },
+  duende:    { hp: 3, spd: 130, dmg: 1, size: 60,  ai: 'flyer',  score: 250 },
 };
 
 let nextId = 1;
@@ -134,6 +136,8 @@ export const BOSSES = {
                     name: 'STONE COLOSSUS OF CUSCO', shot: '#a8977a' },
   boss_madrid:    { hp: 80,  size: 310, style: 'colossus',
                     name: 'EL TORO DE BRONCE', shot: '#e8a030' },
+  boss_sevilla:   { hp: 85,  size: 320, style: 'colossus',
+                    name: 'EL GIRALDILLO', shot: '#b7a24a' },
   boss_lima:      { hp: 85,  size: 300, style: 'djinn',
                     name: 'KON, WRATH OF THE PACIFIC', shot: '#57c8ff' },
   boss_jonkoping: { hp: 100, size: 330, style: 'djinn',

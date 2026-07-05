@@ -64,6 +64,13 @@ BGS = {
                   "dark wooden balconies, cathedral towers, misty grey-blue "
                   "coastal sky over the Pacific ocean cliffs in the distance. "
                   "Wide landscape, layered depth for parallax, no people, no text"),
+    "bg_sevilla": ("A 2D side-scrolling video game background: Sevilla Spain "
+                   "in warm afternoon light, the Giralda bell tower and "
+                   "cathedral, white and ochre Andalusian facades with "
+                   "wrought-iron balconies and orange trees along the street, "
+                   "the Guadalquivir river and Torre del Oro in the distance. "
+                   "Wide landscape, layered depth for parallax, no people, "
+                   "no text"),
     "bg_jonkoping": ("A 2D side-scrolling video game background: Jonkoping "
                      "Sweden on lake Vattern, wooden lakeside houses and a "
                      "white church spire, birch trees, long wooden piers on "
@@ -82,6 +89,11 @@ TILES = {
                     "plaster, seen exactly from the side, spanning the full "
                     "image width, uniform height, repeatable/tileable "
                     "horizontally"),
+    "tile_sevilla": ("A long horizontal 2D side-view game platform: a Sevillian "
+                     "ledge of white plaster with colorful blue-and-yellow "
+                     "azulejo ceramic tiles along the edge, seen exactly from "
+                     "the side, spanning the full image width, uniform height, "
+                     "repeatable/tileable horizontally"),
     "tile_jonkoping": ("A long horizontal 2D side-view game platform: a Swedish "
                        "lakeside wooden pier ledge of weathered grey planks "
                        "with mooring rope and small white flowers on top, seen "
@@ -100,6 +112,12 @@ ENEMIES = {
     "pelicano": ("a demonic giant peruvian pelican enemy with dark storm-grey "
                  "feathers, glowing yellow eyes and a huge sharp beak, wings "
                  "spread in flight"),
+    "bandolero": ("a spanish bandolero outlaw enemy from the Sierra Morena, "
+                  "wide-brimmed black hat, short embroidered jacket, red sash, "
+                  "aiming an old blunderbuss musket"),
+    "duende":   ("a mischievous spanish duende imp enemy, a small goblin "
+                 "spirit with big ears, flamenco-red ruffled collar, glowing "
+                 "amber eyes, hovering with tiny bat wings"),
     "vittra":   ("a swedish vittra forest wraith enemy, a gaunt grey-skinned "
                  "spirit warrior in moss-covered rags with birch-branch antlers "
                  "and glowing pale eyes"),
@@ -116,6 +134,11 @@ BOSSES = {
     "boss_lima":   ("a huge boss monster: KON the ancient peruvian sea god, a "
                     "towering water spirit with a golden Paracas mask, body of "
                     "swirling ocean waves and foam, holding a trident of coral"),
+    "boss_sevilla": ("a huge boss monster: EL GIRALDILLO AWAKENED, the giant "
+                     "bronze weather-vane statue guardian of the Giralda tower "
+                     "come to life, a towering bronze woman in flowing robes "
+                     "with a war banner lance and a round shield, glowing "
+                     "verdigris cracks"),
     "boss_jonkoping": ("a huge boss monster: VATTERNODJURET the lake Vattern "
                        "serpent, a giant nordic water dragon rising in coils, "
                        "dark green scales, pale glowing eyes and fins like a "
@@ -135,6 +158,12 @@ STANDS = {
                            "sweet potato, limes, a small Peruvian flag and a "
                            "hand-painted sign reading CEVICHERIA. EMPTY cart, "
                            "absolutely NO people, NO humans"),
+    "npc_sevilla_stall_0": ("A sevillian fresh orange juice stall for a 2D "
+                            "game: a small white-and-ochre wooden stand piled "
+                            "with bright Seville oranges, a hand juicer press, "
+                            "glasses of orange juice, blue azulejo tile trim "
+                            "and a sign reading NARANJAS. EMPTY stall, "
+                            "absolutely NO people, NO humans"),
     "npc_jonkoping_stall_0": ("A swedish polkagris candy stand for a 2D game: "
                               "a cosy red wooden kiosk with white trim, jars of "
                               "red-and-white striped polkagris candy canes, "
@@ -171,6 +200,20 @@ CHARS = {
             "(bowl slightly lower then higher); poses 7-8 = waving in greeting "
             "with one raised hand (hand at two heights)."),
         "sets": ["idle", "chop", "serve", "wave"],
+    },
+    "sevilla": {
+        "desc": ("a lively sevillian orange-juice vendor woman with dark wavy "
+                 "hair held by a red flower, gold hoop earrings, white blouse "
+                 "with ruffled sleeves and a fitted red polka-dot apron"),
+        "actions": (
+            "Row 1: poses 1-2 = idle, standing smiling holding one orange "
+            "(weight shifting slightly between frames); poses 3-4 = pressing "
+            "an orange half on a hand juicer on a small table (arm at two "
+            "positions). "
+            "Row 2: poses 5-6 = offering a glass of fresh orange juice toward "
+            "the viewer (glass slightly lower then higher); poses 7-8 = waving "
+            "in greeting with one raised hand (hand at two heights)."),
+        "sets": ["idle", "juice", "serve", "wave"],
     },
     "jonkoping": {
         "desc": ("a jolly swedish candy maker man with round glasses, a blond "

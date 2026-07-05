@@ -13,6 +13,7 @@ import { playSong, stopMusic, sfx, unlockAudio } from './audio.js';
 import { net, hostGame, joinGame, send, playerPacket, worldPacket, closeNet } from './net.js';
 import { makeEnding, updateEnding, drawEnding } from './ending.js';
 import { npcAssetNames, drawNpcs } from './npcs.js';
+import { makeDog, updateDog, drawDog, DOG_FRAMES } from './dog.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -26,10 +27,10 @@ const ASSET_LIST = [
       .map(p => `${w}_${p}`)),
   ...Object.keys(TYPES), ...Object.keys(BOSSES),
   'bg_granada', 'bg_alhambra', 'bg_cusco', 'bg_sweden', 'bg_sunset',
-  'bg_madrid', 'bg_lima', 'bg_jonkoping',
+  'bg_madrid', 'bg_lima', 'bg_jonkoping', 'bg_sevilla',
   'tile_granada', 'tile_cusco', 'tile_sweden',
-  'tile_madrid', 'tile_lima', 'tile_jonkoping',
-  ...npcAssetNames(),
+  'tile_madrid', 'tile_lima', 'tile_jonkoping', 'tile_sevilla',
+  ...npcAssetNames(), ...DOG_FRAMES,
 ];
 
 // if a fancy pose is missing, fall back to a basic one (never pink boxes)
@@ -145,6 +146,7 @@ function startLevel(idx, solo) {
     type: k.type, x: k.x, y: k.py ? k.py - 26 : GROUND_Y - 30, w: 26, h: 26, got: false,
   }));
 
+  game.dog = makeDog(60);        // Yossi's yorkie tags along everywhere
   game.bannerT = 3;
   showMenu(false);
   playSong(game.level.music);
@@ -567,6 +569,7 @@ function update(dt) {
       recordEvents(before);
 
       if (net.role === 'solo') updateCompanion(game.other, dt, game);
+      if (game.dog) updateDog(game.dog, dt, game);
 
       if (game.isHost) {
         for (const e of game.enemies)
@@ -607,6 +610,7 @@ function update(dt) {
       updatePlayer(game.me, dt, game, true);
       recordEvents(before);
       if (net.role === 'solo') updateCompanion(game.other, dt, game);
+      if (game.dog) updateDog(game.dog, dt, game);
       if (game.isHost && game.boss) updateBoss(game.boss, dt, game);
       updateCombat(dt);
       netUpdate(dt);
@@ -769,6 +773,7 @@ function render() {
   // entities
   for (const e of game.enemies) drawEnemy(ctx, e);
   if (game.boss) drawBoss(ctx, game.boss);
+  if (game.dog) drawDog(ctx, game.dog);
   drawPlayer(ctx, game.other);
   drawPlayer(ctx, game.me);
 

@@ -120,8 +120,67 @@ export const LEVELS = [
             intro: 'THE BRONZE BULL AWAKENS...' },
   },
   {
+    id: 'sevilla',
+    name: 'LEVEL 3 — SEVILLA',
+    subtitle: 'Bandoleros and duendes under the Giralda',
+    bg: 'bg_sevilla', music: 'granada', tile: 'tile_sevilla',
+    length: 5800, checkpoint: 2950,
+    groundTop: '#d8b98a', groundBottom: '#9a7a54', platColor: '#c49a68',
+    platforms: [
+      { x: 700,  y: 350, w: 190, h: 22 },
+      { x: 940,  y: 250, w: 140, h: 22 },
+      { x: 1180, y: 320, w: 170, h: 22 },   // spans pit 1
+      { x: 1520, y: 330, w: 160, h: 22 },   // ladder up here
+      { x: 1740, y: 230, w: 140, h: 22 },
+      { x: 2380, y: 360, w: 220, h: 22 },
+      { x: 2640, y: 280, w: 150, h: 22 },   // spans pit 2
+      { x: 3320, y: 330, w: 170, h: 22 },   // ladder up here
+      { x: 3540, y: 230, w: 150, h: 22 },
+      { x: 4250, y: 350, w: 200, h: 22 },
+      { x: 4510, y: 270, w: 150, h: 22 },   // spans pit 3
+      // high route: azulejo rooftops
+      { x: 1970, y: 210, w: 140, h: 22 },
+      { x: 2180, y: 250, w: 130, h: 22 },
+      { x: 3770, y: 210, w: 150, h: 22 },
+      { x: 3990, y: 250, w: 140, h: 22 },
+    ],
+    pits: [
+      { x: 1200, w: 170 }, { x: 2650, w: 180 }, { x: 4520, w: 180 },
+    ],
+    ladders: [
+      { x: 1580, y: 330, w: 26, h: 140 },
+      { x: 3380, y: 330, w: 26, h: 140 },
+    ],
+    spawns: [
+      { type: 'bandolero', x: 820 }, { type: 'duende', x: 1100 },
+      { type: 'matador', x: 1620 },  { type: 'duende', x: 1920 },
+      { type: 'bandolero', x: 2220 },{ type: 'matador', x: 2420 },
+      { type: 'duende', x: 2920 },   { type: 'bandolero', x: 3080 },
+      { type: 'matador', x: 3480 },  { type: 'bandolero', x: 3820 },
+      { type: 'duende', x: 4120 },   { type: 'matador', x: 4320 },
+      { type: 'bandolero', x: 4820 },{ type: 'duende', x: 5020 },
+    ],
+    pickups: [
+      { type: 'ammo', x: 750,  py: 350 }, { type: 'nade', x: 1800, py: 230 },
+      { type: 'heart', x: 2450, py: 360 },{ type: 'ammo', x: 3380, py: 330 },
+      { type: 'nade', x: 3600, py: 230 }, { type: 'ammo', x: 4310, py: 350 },
+      { type: 'ammo', x: 5200 }, { type: 'heart', x: 5350 },
+      { type: 'heart', x: 2020, py: 210 }, { type: 'nade', x: 3820, py: 210 },  // high route
+    ],
+    // ambient townsfolk (orange juice stall) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 440 }, { set: 'juice', x: 560 },
+      { set: 'idle', x: 1000, face: -1 },
+      { set: 'serve', x: 1700 }, { set: 'wave', x: 2200, face: -1 },
+      { set: 'idle', x: 3100 }, { set: 'serve', x: 3900, face: -1 },
+      { set: 'wave', x: 5100 },
+    ],
+    boss: { type: 'boss_sevilla', bg: 'bg_sevilla', music: 'boss',
+            intro: 'THE GIRALDA STATUE DESCENDS...' },
+  },
+  {
     id: 'cusco',
-    name: 'LEVEL 3 — CUSCO',
+    name: 'LEVEL 4 — CUSCO',
     subtitle: 'The ancient warriors of the Andes awaken',
     bg: 'bg_cusco', music: 'cusco', tile: 'tile_cusco',
     length: 6000, checkpoint: 3450,
@@ -182,7 +241,7 @@ export const LEVELS = [
   },
   {
     id: 'lima',
-    name: 'LEVEL 4 — LIMA',
+    name: 'LEVEL 5 — LIMA',
     subtitle: 'Ghost pirates haunt the Pacific coast',
     bg: 'bg_lima', music: 'cusco', tile: 'tile_lima',
     length: 6000, checkpoint: 3400,
@@ -243,7 +302,7 @@ export const LEVELS = [
   },
   {
     id: 'sweden',
-    name: 'LEVEL 5 — SVERIGE',
+    name: 'LEVEL 6 — SVERIGE',
     subtitle: 'Almost home... trolls in the midsummer woods',
     bg: 'bg_sweden', music: 'sweden', tile: 'tile_sweden',
     length: 5200, checkpoint: 2550,
@@ -296,7 +355,7 @@ export const LEVELS = [
   },
   {
     id: 'jonkoping',
-    name: 'FINAL LEVEL — JÖNKÖPING',
+    name: 'FINAL LEVEL — JÖNKÖPING',   // level 7
     subtitle: 'Home at last... but Lake Vättern is stirring',
     bg: 'bg_jonkoping', music: 'sweden', tile: 'tile_jonkoping',
     length: 5400, checkpoint: 2700,
