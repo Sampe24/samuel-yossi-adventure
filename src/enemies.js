@@ -13,6 +13,12 @@ export const TYPES = {
   condor:    { hp: 3, spd: 140, dmg: 1, size: 70,  ai: 'flyer',  score: 250 },
   troll:     { hp: 8, spd: 55,  dmg: 2, size: 96,  ai: 'patrol', score: 300 },
   nacken:    { hp: 4, spd: 0,   dmg: 1, size: 76,  ai: 'shooter',score: 300 },
+  matador:   { hp: 6, spd: 80,  dmg: 2, size: 84,  ai: 'patrol', score: 220 },
+  toro:      { hp: 7, spd: 200, dmg: 2, size: 92,  ai: 'chase',  score: 300 },
+  pirata:    { hp: 5, spd: 160, dmg: 2, size: 82,  ai: 'chase',  score: 250 },
+  pelicano:  { hp: 3, spd: 150, dmg: 1, size: 74,  ai: 'flyer',  score: 250 },
+  vittra:    { hp: 6, spd: 180, dmg: 2, size: 84,  ai: 'chase',  score: 300 },
+  huldra:    { hp: 5, spd: 50,  dmg: 1, size: 80,  ai: 'shooter',score: 300 },
 };
 
 let nextId = 1;
@@ -120,10 +126,22 @@ export function drawEnemy(ctx, e) {
 
 /* ------------------------- BOSSES ------------------------- */
 
+// style 'djinn' = hovering shooter/dasher; 'colossus' = walking leaper/hurler
+export const BOSSES = {
+  boss_alhambra:  { hp: 70,  size: 300, style: 'djinn',
+                    name: 'DJINN SULTAN OF THE ALHAMBRA', shot: '#ff8830' },
+  boss_cusco:     { hp: 90,  size: 320, style: 'colossus',
+                    name: 'STONE COLOSSUS OF CUSCO', shot: '#a8977a' },
+  boss_madrid:    { hp: 80,  size: 310, style: 'colossus',
+                    name: 'EL TORO DE BRONCE', shot: '#e8a030' },
+  boss_lima:      { hp: 85,  size: 300, style: 'djinn',
+                    name: 'KON, WRATH OF THE PACIFIC', shot: '#57c8ff' },
+  boss_jonkoping: { hp: 100, size: 330, style: 'djinn',
+                    name: 'VÄTTERNODJURET', shot: '#7fe8d8' },
+};
+
 export function makeBoss(type, arenaX) {
-  const cfg = type === 'boss_alhambra'
-    ? { hp: 70, size: 300, name: 'DJINN SULTAN OF THE ALHAMBRA' }
-    : { hp: 90, size: 320, name: 'STONE COLOSSUS OF CUSCO' };
+  const cfg = BOSSES[type];
   const h = cfg.size * .8;
   return {
     kind: 'boss', id: nextId++, type, ...cfg, maxHp: cfg.hp,
@@ -142,8 +160,8 @@ export function updateBoss(b, dt, game) {
   b.facing = Math.sign(p.x - b.x) || -1;
   const enraged = b.hp < b.maxHp * .45;
 
-  if (b.type === 'boss_alhambra') {
-    // Djinn: hovers in sine wave, volleys fireballs, dashes when close.
+  if (b.style === 'djinn') {
+    // Djinn-style: hovers in sine wave, volleys shots, dashes when close.
     b.y = GROUND_Y - b.h - 40 + Math.sin(b.animT * 1.5) * 30;
     if (b.state === 'enter' && b.t <= 0) { b.state = 'float'; b.t = 2; }
     else if (b.state === 'float') {
@@ -159,7 +177,7 @@ export function updateBoss(b, dt, game) {
         const ang = Math.atan2((p.y + p.h / 2) - (b.y + b.h * .3), p.x - b.x) + (Math.random() - .5) * .35;
         game.bullets.push({ x: b.x + b.w / 2, y: b.y + b.h * .3,
           vx: Math.cos(ang) * 330, vy: Math.sin(ang) * 330,
-          w: 18, h: 18, dmg: 1, from: 'enemy', life: 3, color: '#ff8830', fire: true });
+          w: 18, h: 18, dmg: 1, from: 'enemy', life: 3, color: b.shot, fire: true });
       }
       if (b.t <= 0) { b.state = 'float'; b.t = enraged ? 1.2 : 2; }
     } else if (b.state === 'dash') {
@@ -167,7 +185,7 @@ export function updateBoss(b, dt, game) {
       if (b.t <= 0) { b.state = 'float'; b.t = 1.6; b.vx = 0; }
     }
   } else {
-    // Colossus: walks, leaps with shockwave, hurls stones.
+    // Colossus-style: walks, leaps with shockwave, hurls stones.
     if (b.state === 'enter' && b.t <= 0) { b.state = 'walk'; b.t = 2.2; }
     else if (b.state === 'walk') {
       b.vx = b.facing * (enraged ? 130 : 80);
@@ -193,7 +211,7 @@ export function updateBoss(b, dt, game) {
         b.shotT = enraged ? .5 : .8;
         game.bullets.push({ x: b.x + b.w / 2, y: b.y + 30,
           vx: b.facing * (260 + Math.random() * 160), vy: -420 - Math.random() * 120,
-          w: 22, h: 22, dmg: 2, from: 'enemy', life: 3, color: '#a8977a', grav: true });
+          w: 22, h: 22, dmg: 2, from: 'enemy', life: 3, color: b.shot, grav: true });
       }
       if (b.t <= 0) { b.state = 'walk'; b.t = 2; }
     }

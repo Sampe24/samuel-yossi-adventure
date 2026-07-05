@@ -61,8 +61,67 @@ export const LEVELS = [
             intro: 'INSIDE THE ALHAMBRA...' },
   },
   {
+    id: 'madrid',
+    name: 'LEVEL 2 — MADRID',
+    subtitle: 'Bulls and blades on the Plaza Mayor',
+    bg: 'bg_madrid', music: 'granada', tile: 'tile_madrid',
+    length: 5800, checkpoint: 3000,
+    groundTop: '#b9a48a', groundBottom: '#7a6a52', platColor: '#a08a6a',
+    platforms: [
+      { x: 720,  y: 350, w: 190, h: 22 },
+      { x: 960,  y: 250, w: 140, h: 22 },
+      { x: 1200, y: 320, w: 170, h: 22 },   // spans pit 1
+      { x: 1550, y: 330, w: 160, h: 22 },   // ladder up here
+      { x: 1770, y: 230, w: 140, h: 22 },
+      { x: 2400, y: 360, w: 220, h: 22 },
+      { x: 2660, y: 280, w: 150, h: 22 },   // spans pit 2
+      { x: 3350, y: 330, w: 170, h: 22 },   // ladder up here
+      { x: 3570, y: 230, w: 150, h: 22 },
+      { x: 4300, y: 350, w: 200, h: 22 },
+      { x: 4560, y: 270, w: 150, h: 22 },   // spans pit 3
+      // high route: balcony rooftops
+      { x: 2000, y: 210, w: 140, h: 22 },
+      { x: 2210, y: 250, w: 130, h: 22 },
+      { x: 3800, y: 210, w: 150, h: 22 },
+      { x: 4020, y: 250, w: 140, h: 22 },
+    ],
+    pits: [
+      { x: 1220, w: 170 }, { x: 2670, w: 180 }, { x: 4570, w: 180 },
+    ],
+    ladders: [
+      { x: 1610, y: 330, w: 26, h: 140 },
+      { x: 3410, y: 330, w: 26, h: 140 },
+    ],
+    spawns: [
+      { type: 'matador', x: 820 },  { type: 'toro', x: 1120 },
+      { type: 'matador', x: 1650 }, { type: 'gargoyle', x: 1950 },
+      { type: 'toro', x: 2250 },    { type: 'matador', x: 2450 },
+      { type: 'gargoyle', x: 2950 },{ type: 'matador', x: 3100 },
+      { type: 'toro', x: 3500 },    { type: 'matador', x: 3850 },
+      { type: 'gargoyle', x: 4150 },{ type: 'toro', x: 4380 },
+      { type: 'matador', x: 4850 }, { type: 'toro', x: 5050 },
+    ],
+    pickups: [
+      { type: 'ammo', x: 770,  py: 350 }, { type: 'nade', x: 1830, py: 230 },
+      { type: 'heart', x: 2470, py: 360 },{ type: 'ammo', x: 3410, py: 330 },
+      { type: 'nade', x: 3630, py: 230 }, { type: 'ammo', x: 4360, py: 350 },
+      { type: 'ammo', x: 5250 }, { type: 'heart', x: 5400 },
+      { type: 'heart', x: 2050, py: 210 }, { type: 'nade', x: 3850, py: 210 },  // high route
+    ],
+    // ambient townsfolk (churros stall) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 440 }, { set: 'fry', x: 560 },
+      { set: 'idle', x: 1000, face: -1 },
+      { set: 'serve', x: 1700 }, { set: 'wave', x: 2220, face: -1 },
+      { set: 'idle', x: 3120 }, { set: 'serve', x: 3920, face: -1 },
+      { set: 'wave', x: 5150 },
+    ],
+    boss: { type: 'boss_madrid', bg: 'bg_madrid', music: 'boss',
+            intro: 'THE BRONZE BULL AWAKENS...' },
+  },
+  {
     id: 'cusco',
-    name: 'LEVEL 2 — CUSCO',
+    name: 'LEVEL 3 — CUSCO',
     subtitle: 'The ancient warriors of the Andes awaken',
     bg: 'bg_cusco', music: 'cusco', tile: 'tile_cusco',
     length: 6000, checkpoint: 3450,
@@ -122,8 +181,69 @@ export const LEVELS = [
             intro: 'THE PLAZA DE ARMAS TREMBLES...' },
   },
   {
+    id: 'lima',
+    name: 'LEVEL 4 — LIMA',
+    subtitle: 'Ghost pirates haunt the Pacific coast',
+    bg: 'bg_lima', music: 'cusco', tile: 'tile_lima',
+    length: 6000, checkpoint: 3400,
+    groundTop: '#c9b896', groundBottom: '#8a7a5d', platColor: '#b0906a',
+    platforms: [
+      { x: 640,  y: 350, w: 200, h: 22 },
+      { x: 870,  y: 250, w: 140, h: 22 },
+      { x: 1370, y: 320, w: 190, h: 22 },   // spans pit 1
+      { x: 2340, y: 350, w: 240, h: 22 },   // ladder up here
+      { x: 2610, y: 250, w: 150, h: 22 },
+      { x: 3070, y: 310, w: 180, h: 22 },   // spans pit 2
+      { x: 3640, y: 350, w: 180, h: 22 },
+      { x: 3860, y: 250, w: 150, h: 22 },
+      { x: 4140, y: 350, w: 200, h: 22 },   // ladder up here
+      { x: 4720, y: 290, w: 170, h: 22 },   // spans pit 3
+      { x: 4990, y: 340, w: 180, h: 22 },
+      // high route: balcony walkways
+      { x: 1120, y: 230, w: 140, h: 22 },
+      { x: 1600, y: 250, w: 150, h: 22 },
+      { x: 2830, y: 220, w: 150, h: 22 },
+      { x: 3390, y: 230, w: 140, h: 22 },
+    ],
+    pits: [
+      { x: 1400, w: 170 }, { x: 3090, w: 180 }, { x: 4740, w: 160 },
+    ],
+    ladders: [
+      { x: 2420, y: 350, w: 26, h: 120 },
+      { x: 4200, y: 350, w: 26, h: 120 },
+    ],
+    spawns: [
+      { type: 'pirata', x: 890 },   { type: 'pelicano', x: 1240 },
+      { type: 'pirata', x: 1740 },  { type: 'inca', x: 2040 },
+      { type: 'pelicano', x: 2480 },{ type: 'pirata', x: 2720 },
+      { type: 'inca', x: 3000 },    { type: 'pirata', x: 3390 },
+      { type: 'pelicano', x: 3740 },{ type: 'pirata', x: 3920 },
+      { type: 'pelicano', x: 4290 },{ type: 'inca', x: 4540 },
+      { type: 'pirata', x: 5020 },  { type: 'pelicano', x: 5140 },
+      { type: 'pirata', x: 5440 },
+    ],
+    pickups: [
+      { type: 'ammo', x: 690, py: 350 },  { type: 'nade', x: 920, py: 250 },
+      { type: 'heart', x: 2420, py: 350 },{ type: 'ammo', x: 2670, py: 250 },
+      { type: 'nade', x: 3920, py: 250 }, { type: 'ammo', x: 4220, py: 350 },
+      { type: 'heart', x: 4780, py: 290 },{ type: 'ammo', x: 5540 },
+      { type: 'heart', x: 5690 },
+      { type: 'ammo', x: 1170, py: 230 }, { type: 'heart', x: 2880, py: 220 },  // high route
+    ],
+    // ambient townsfolk (ceviche cart) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 470 }, { set: 'chop', x: 600 },
+      { set: 'idle', x: 1010, face: -1 },
+      { set: 'serve', x: 1780 }, { set: 'chop', x: 2200, face: -1 },
+      { set: 'wave', x: 2760 }, { set: 'serve', x: 3660 },
+      { set: 'idle', x: 4360, face: -1 }, { set: 'wave', x: 5420 },
+    ],
+    boss: { type: 'boss_lima', bg: 'bg_lima', music: 'boss',
+            intro: 'A COLD WIND FROM THE PACIFIC...' },
+  },
+  {
     id: 'sweden',
-    name: 'LEVEL 3 — SVERIGE',
+    name: 'LEVEL 5 — SVERIGE',
     subtitle: 'Almost home... trolls in the midsummer woods',
     bg: 'bg_sweden', music: 'sweden', tile: 'tile_sweden',
     length: 5200, checkpoint: 2550,
@@ -172,6 +292,61 @@ export const LEVELS = [
       { type: 'heart', x: 4600 },
       { type: 'heart', x: 2320, py: 210 }, { type: 'ammo', x: 3600, py: 220 },  // high route
     ],
-    boss: null,   // ends in the midsummer sunset instead
+    boss: null,   // no boss here — the road home leads on to Jönköping
+  },
+  {
+    id: 'jonkoping',
+    name: 'FINAL LEVEL — JÖNKÖPING',
+    subtitle: 'Home at last... but Lake Vättern is stirring',
+    bg: 'bg_jonkoping', music: 'sweden', tile: 'tile_jonkoping',
+    length: 5400, checkpoint: 2700,
+    groundTop: '#8a9a6e', groundBottom: '#4c5e3b', platColor: '#8a7a5c',
+    platforms: [
+      { x: 820,  y: 350, w: 190, h: 22 },   // lakeside piers
+      { x: 1050, y: 250, w: 130, h: 22 },
+      { x: 1260, y: 320, w: 170, h: 22 },   // spans pit 1
+      { x: 1850, y: 330, w: 190, h: 22 },   // ladder up here
+      { x: 2070, y: 230, w: 140, h: 22 },
+      { x: 2680, y: 300, w: 170, h: 22 },   // spans pit 2
+      { x: 2950, y: 350, w: 210, h: 22 },
+      { x: 3850, y: 330, w: 190, h: 22 },
+      { x: 3990, y: 250, w: 160, h: 22 },   // spans pit 3
+      // high route: rooftop path
+      { x: 2320, y: 210, w: 140, h: 22 },
+      { x: 2510, y: 260, w: 130, h: 22 },
+      { x: 3350, y: 260, w: 150, h: 22 },
+      { x: 3600, y: 220, w: 140, h: 22 },
+    ],
+    pits: [
+      { x: 1280, w: 170 }, { x: 2700, w: 180 }, { x: 4010, w: 160 },
+    ],
+    ladders: [
+      { x: 1910, y: 330, w: 26, h: 140 },
+      { x: 3010, y: 350, w: 26, h: 120 },
+    ],
+    spawns: [
+      { type: 'vittra', x: 920 },  { type: 'huldra', x: 1580 },
+      { type: 'vittra', x: 1950 }, { type: 'troll', x: 2480 },
+      { type: 'huldra', x: 2980 }, { type: 'vittra', x: 3430 },
+      { type: 'nacken', x: 3880 }, { type: 'vittra', x: 4330 },
+      { type: 'huldra', x: 4650 }, { type: 'troll', x: 4900 },
+    ],
+    pickups: [
+      { type: 'heart', x: 870, py: 350 }, { type: 'nade', x: 1100, py: 250 },
+      { type: 'ammo', x: 1920, py: 330 }, { type: 'heart', x: 2130, py: 230 },
+      { type: 'heart', x: 3000, py: 350 },{ type: 'ammo', x: 3920, py: 330 },
+      { type: 'heart', x: 4700 },
+      { type: 'heart', x: 2370, py: 210 }, { type: 'ammo', x: 3650, py: 220 },  // high route
+    ],
+    // ambient townsfolk (polkagris candy stand) drawn behind the action
+    npcs: [
+      { set: 'stall', x: 460 }, { set: 'roll', x: 585 },
+      { set: 'idle', x: 1000, face: -1 },
+      { set: 'serve', x: 1760 }, { set: 'wave', x: 2260, face: -1 },
+      { set: 'roll', x: 3120 }, { set: 'serve', x: 3920, face: -1 },
+      { set: 'wave', x: 4880 },
+    ],
+    boss: { type: 'boss_jonkoping', bg: 'bg_jonkoping', music: 'boss',
+            intro: 'SOMETHING RISES FROM LAKE VÄTTERN...' },
   },
 ];

@@ -292,8 +292,9 @@ const RUN_FPS = 9;
 export function playerSprite(p) {
   if (p.action === 'roll') return `${p.who}_roll`;
   if (p.climbing) return `${p.who}_climb`;
-  if (p.guarding) return `${p.who}_crouch`;      // shield stance uses crouch pose
-  if (p.action) return `${p.who}_${p.action}`;   // slash|slash2|slash3|shoot|throw
+  if (p.guarding) return `${p.who}_guard`;       // braced sword-block stance
+  if (p.action) return `${p.who}_${p.action}`;   // slash|spin|parry|shoot|throw...
+  if (p.charging && p.chargeT > .2) return `${p.who}_charge`;
   if (p.low) return `${p.who}_crouch`;
   if (!p.onGround) return p.jumps >= 2 ? `${p.who}_flip` : `${p.who}_jump`;
   if (Math.abs(p.vx) > 10)
@@ -323,8 +324,10 @@ export function drawPlayer(ctx, p) {
   } else if (p.action === 'spin') {
     hgt = 92;                                  // whirlwind: full 360° blade spin
     rot = Math.PI * 2 * (1 - Math.max(0, p.actionT) / .38);
+  } else if (p.action === 'parry') {
+    hgt = 94;                                  // sword flung up deflecting the shot
   } else if (p.guarding) {
-    hgt = 62;                                  // braced shield stance
+    hgt = 74;                                  // braced sword-block stance
   } else if (p.climbing) {
     hgt = 96;
   } else if (!p.onGround && p.jumps >= 2) {

@@ -24,6 +24,21 @@ export const NPC_ANIMS = {
     woman_idle: { frames: 2, h: 88 }, woman_plane:{ frames: 2, h: 88 },
     woman_paint:{ frames: 2, h: 88 }, woman_approve:{ frames: 2, h: 88 },
   },
+  madrid: {
+    stall: { frames: 1, h: 120 },
+    idle:  { frames: 2, h: 88 }, fry:   { frames: 2, h: 88 },
+    serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
+  },
+  lima: {
+    stall: { frames: 1, h: 120 },
+    idle:  { frames: 2, h: 88 }, chop:  { frames: 2, h: 88 },
+    serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
+  },
+  jonkoping: {
+    stall: { frames: 1, h: 120 },
+    idle:  { frames: 2, h: 88 }, roll:  { frames: 2, h: 88 },
+    serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
+  },
 };
 
 export function npcAssetNames() {

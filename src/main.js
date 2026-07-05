@@ -7,7 +7,7 @@ import { makePlayer, updatePlayer, updateCompanion, hurtPlayer, drawPlayer,
          playerSprite, doSlash, doShoot, doNade, doChargedShot, MAX_HP,
          grantXP, xpForNext } from './player.js';
 import { makeEnemy, updateEnemy, drawEnemy, makeBoss, updateBoss, drawBoss,
-         drawBossBar, TYPES } from './enemies.js';
+         drawBossBar, TYPES, BOSSES } from './enemies.js';
 import { LEVELS } from './levels.js';
 import { playSong, stopMusic, sfx, unlockAudio } from './audio.js';
 import { net, hostGame, joinGame, send, playerPacket, worldPacket, closeNet } from './net.js';
@@ -21,11 +21,14 @@ ctx.imageSmoothingEnabled = false;
 const ASSET_LIST = [
   ...['samuel', 'yossi'].flatMap(w =>
     ['idle', 'run1', 'run2', 'jump', 'slash', 'shoot', 'throw',
-     'slash2', 'slash3', 'crouch', 'roll', 'flip', 'climb', 'victory']
+     'slash2', 'slash3', 'crouch', 'roll', 'flip', 'climb', 'victory',
+     'spin', 'guard', 'parry', 'charge']
       .map(p => `${w}_${p}`)),
-  ...Object.keys(TYPES), 'boss_alhambra', 'boss_cusco',
+  ...Object.keys(TYPES), ...Object.keys(BOSSES),
   'bg_granada', 'bg_alhambra', 'bg_cusco', 'bg_sweden', 'bg_sunset',
+  'bg_madrid', 'bg_lima', 'bg_jonkoping',
   'tile_granada', 'tile_cusco', 'tile_sweden',
+  'tile_madrid', 'tile_lima', 'tile_jonkoping',
   ...npcAssetNames(),
 ];
 
@@ -33,6 +36,7 @@ const ASSET_LIST = [
 const SPRITE_FALLBACKS = {
   slash2: 'slash', slash3: 'slash', crouch: 'idle', roll: 'jump',
   flip: 'jump', climb: 'idle', victory: 'idle', spin: 'slash3',
+  guard: 'crouch', parry: 'slash', charge: 'shoot',
 };
 function applyFallbacks() {
   for (const w of ['samuel', 'yossi'])
@@ -300,6 +304,7 @@ function updateCombat(dt) {
               b.vx = Math.max(420, Math.abs(b.vx)) * p.facing; b.vy = 0;
               b.grav = false; b.wave = false; b.life = 1.4;
               sfx.parry(); game.freeze = Math.max(game.freeze, .06);
+              p.action = 'parry'; p.actionT = .25;
               addPopup(p.x + p.w / 2, p.y - 26, 'PARRY!', '#7fd8ff', true);
             } else {                                      // blocked
               b.life = 0; sfx.guard(); spark(b.x, b.y, '#ffd76a');
@@ -394,11 +399,10 @@ function netUpdate(dt) {
                  w: t.size * .5, h: t.size * .78, size: t.size, ai: t.ai,
                  hitFlash: 0, animT: performance.now() / 1000 };
       });
-      game.boss = wld.bo ? { ...wld.bo, type: wld.bo.ty, x: wld.bo.x, y: wld.bo.y,
-        hp: wld.bo.hp, facing: wld.bo.f, size: wld.bo.ty === 'boss_cusco' ? 320 : 300,
-        w: 140, h: 250, maxHp: wld.bo.ty === 'boss_cusco' ? 90 : 70,
-        name: wld.bo.ty === 'boss_cusco' ? 'STONE COLOSSUS OF CUSCO' : 'DJINN SULTAN OF THE ALHAMBRA',
-        hitFlash: 0, animT: 0, state: wld.bo.st } : null;
+      game.boss = wld.bo ? (cfg => ({ ...wld.bo, type: wld.bo.ty, x: wld.bo.x,
+        y: wld.bo.y, hp: wld.bo.hp, facing: wld.bo.f, size: cfg.size,
+        w: cfg.size * .45, h: cfg.size * .8, maxHp: cfg.hp, name: cfg.name,
+        hitFlash: 0, animT: 0, state: wld.bo.st }))(BOSSES[wld.bo.ty]) : null;
       game.bullets = wld.bu.map(b => ({ ...b, h: b.w > 20 ? 18 : 6, vx: 0, vy: 0, life: 1,
                                         from: b.fr, dmg: 0 }));
       game.pickups = wld.pk.map(k => ({ ...k, type: k.ty, w: 26, h: 26 }));
@@ -583,7 +587,7 @@ function update(dt) {
       // reach end of level?
       if (game.isHost && game.me.x > game.level.length - 260) {
         if (game.level.boss) enterBossArena();
-        else if (game.levelIdx === 2) startEnding();
+        else if (game.levelIdx === LEVELS.length - 1) startEnding();
         else levelCleared();
       }
       checkDead(dt);
@@ -615,7 +619,7 @@ function update(dt) {
       game.clearT -= dt;
       netUpdate(dt);
       if (game.clearT <= 0 && game.isHost) {
-        if (game.levelIdx === 2) startEnding();
+        if (game.levelIdx === LEVELS.length - 1) startEnding();
         else startLevel(game.levelIdx + 1, net.role === 'solo');
       }
       break;
