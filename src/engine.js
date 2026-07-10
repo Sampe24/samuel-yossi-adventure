@@ -135,6 +135,58 @@ export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1,
   ctx.restore();
 }
 
+// One continuous mural: the segment images are laid side by side on the
+// parallax layer with a soft blended seam, so new streets scroll in as part
+// of the world (no screen-wide crossfade). The parallax factor is derived
+// so the full strip is traversed exactly over the level's length.
+export function drawStitchedBackground(ctx, names, levelLen, overlap = 150) {
+  const imgs = names.map(n => images[n]).filter(Boolean);
+  if (!imgs.length) { ctx.fillStyle = '#223'; ctx.fillRect(0, 0, W, H); return; }
+  const hgt = GROUND_Y + 30;
+  const ws = imgs.map(im => im.width * hgt / im.height);
+  const total = ws.reduce((a, b) => a + b, 0) - overlap * (imgs.length - 1);
+  const p = Math.max(.15, (total - W) / Math.max(1, levelLen - W));
+  let x = -camera.x * p;
+  for (let i = 0; i < imgs.length; i++) {
+    const im = imgs[i], w = ws[i];
+    if (x < W + 2 && x + w > -2) {
+      if (i === 0) {
+        ctx.drawImage(im, x, 0, w, hgt);
+      } else {
+        // blend the first `overlap` px over the previous image in slices
+        const S = 10, sw = overlap / S, sx = im.width / w;
+        for (let s = 0; s < S; s++) {
+          ctx.globalAlpha = (s + 1) / S;
+          ctx.drawImage(im, s * sw * sx, 0, sw * sx, im.height,
+                        x + s * sw, 0, sw + 1, hgt);
+        }
+        ctx.globalAlpha = 1;
+        ctx.drawImage(im, overlap * sx, 0, im.width - overlap * sx, im.height,
+                      x + overlap, 0, w - overlap, hgt);
+      }
+    }
+    x += w - overlap;
+  }
+}
+
+// where (in world-x) stitched segment i begins — used for landmark popups
+export function stitchedBounds(names, levelLen, overlap = 150) {
+  const imgs = names.map(n => images[n]).filter(Boolean);
+  if (!imgs.length) return [];
+  const hgt = GROUND_Y + 30;
+  const ws = imgs.map(im => im.width * hgt / im.height);
+  const total = ws.reduce((a, b) => a + b, 0) - overlap * (imgs.length - 1);
+  const p = Math.max(.15, (total - W) / Math.max(1, levelLen - W));
+  const out = [];
+  let o = 0;
+  for (let i = 0; i < ws.length - 1; i++) {
+    o += ws[i] - overlap;
+    // world-x of the player when this seam sits at the screen centre
+    out.push((o + overlap / 2 - W / 2) / p + W / 2);
+  }
+  return out;
+}
+
 // Background that changes as you travel: `segs` is a list of image names,
 // `bounds` the world-x positions where one street hands over to the next.
 // Around each boundary the two neighbours crossfade, so walking the level

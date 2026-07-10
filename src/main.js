@@ -2,7 +2,7 @@
 
 import { W, H, GROUND_Y, loadImages, images, camera, updateCamera, clearPressed,
          pressed, keys, input, overlap, drawSprite, drawBackground,
-         drawSegmentedBackground, drawGround,
+         drawStitchedBackground, stitchedBounds, drawGround,
          drawPlatforms, drawLadders, clamp } from './engine.js';
 import { makePlayer, updatePlayer, updateCompanion, hurtPlayer, drawPlayer,
          playerSprite, doSlash, doShoot, doNade, doChargedShot, MAX_HP,
@@ -658,13 +658,18 @@ function update(dt) {
       netUpdate(dt);
       updateCamera(game.me, game.level.length, dt);
 
-      // landmark sign popups as new streets fade in
-      for (const lm of game.level.landmarks || []) {
-        if (!game.seenLandmarks[lm.text] && Math.abs(game.me.x - lm.x) < 130) {
-          game.seenLandmarks[lm.text] = true;
-          addPopup(lm.x, GROUND_Y - 250, lm.text, '#ffd76a', true);
-          sfx.pickup();
-        }
+      // landmark sign popups as each stitched street scrolls into view
+      if (game.level.landmarks && game.level.bgSegments) {
+        const seams = stitchedBounds(game.level.bgSegments, game.level.length);
+        game.level.landmarks.forEach((text, i) => {
+          const lx = seams[i];
+          if (lx !== undefined && !game.seenLandmarks[text] &&
+              Math.abs(game.me.x - lx) < 140) {
+            game.seenLandmarks[text] = true;
+            addPopup(lx, GROUND_Y - 250, text, '#ffd76a', true);
+            sfx.pickup();
+          }
+        });
       }
 
       // checkpoint flag
@@ -800,7 +805,7 @@ function render() {
   if (game.phase === 'memory') { drawMemoryLane(ctx, game.memory); return; }
 
   if (!game.arena && game.level.bgSegments)
-    drawSegmentedBackground(ctx, game.level.bgSegments, game.level.bgBounds);
+    drawStitchedBackground(ctx, game.level.bgSegments, game.level.length);
   else drawBackground(ctx, game.level.bg, game.arena ? 0 : 0.35);
   drawGround(ctx, game.level);
   if (!game.arena) drawDecor(ctx, game.level, camera.x, W);

@@ -24,13 +24,8 @@ BASE = ("A 2D side-scrolling video game background. Wide landscape "
 
 BGS = {
     # ---- Granada level street segments (match bg_granada's warm look) ----
-    "bg_gr_triunfo": (
-        "Granada Spain, the Plaza del Triunfo gardens in warm afternoon "
-        "light: a tall white baroque stone column monument topped with a "
-        "small golden Virgin statue rising over trimmed green hedges, low "
-        "arcs of white fountain jets, elegant black street lanterns, "
-        "whitewashed Andalusian facades with terracotta roofs behind, "
-        "snowy Sierra Nevada mountains in the far distance"),
+    # (the Plaza del Triunfo stretch reuses bg_mem_parque — same place as
+    #  Tonito's park in Memory Lane, per user request)
     "bg_gr_genil": (
         "Granada Spain, the Rio Genil river promenade in warm afternoon "
         "light: a low curved stone embankment wall with a black wrought-"

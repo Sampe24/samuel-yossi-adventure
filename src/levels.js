@@ -6,15 +6,12 @@ export const LEVELS = [
     name: 'LEVEL 1 — GRANADA',
     subtitle: 'Fight through the old town to the Alhambra',
     bg: 'bg_granada', music: 'granada', tile: 'tile_granada',
-    // the backdrop itself changes as you cross the city: old town with the
-    // Alhambra -> Plaza del Triunfo -> Rio Genil promenade -> Paseo del Salon
-    bgSegments: ['bg_granada', 'bg_gr_triunfo', 'bg_gr_genil', 'bg_gr_salon'],
-    bgBounds: [1500, 2950, 4350],
-    landmarks: [
-      { x: 1650, text: 'PLAZA DEL TRIUNFO' },
-      { x: 3100, text: 'RÍO GENIL' },
-      { x: 4500, text: 'PASEO DEL SALÓN' },
-    ],
+    // the backdrop is one stitched mural across the city: old town with the
+    // Alhambra -> Tonito's park at the Triunfo -> Rio Genil -> Paseo del
+    // Salon. Landmark names pop as each seam scrolls past (positions are
+    // derived from the stitched image widths at runtime).
+    bgSegments: ['bg_granada', 'bg_mem_parque', 'bg_gr_genil', 'bg_gr_salon'],
+    landmarks: ['PLAZA DEL TRIUNFO', 'RÍO GENIL', 'PASEO DEL SALÓN'],
     length: 5600, checkpoint: 2900,
     groundTop: '#c9a06a', groundBottom: '#8a6437', platColor: '#b98d55',
     platforms: [
