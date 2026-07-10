@@ -93,8 +93,11 @@ export function updateCamera(target, levelLen, dt) {
 }
 
 // ---------- drawing ----------
-// tint: optional { color, a } wash painted over the sprite's own pixels
-// (source-atop), used for the enemy telegraph flash and the NPC depth wash.
+// tint: optional { color, a } wash painted over the sprite's own pixels,
+// used for the enemy telegraph flash and the NPC depth wash. Composited on
+// an offscreen canvas — source-atop on the main canvas would tint the whole
+// bounding box, since the background below is opaque.
+let tintCanvas = null;
 export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1,
                            rot = 0, tint = null) {
   const img = images[name];
@@ -107,12 +110,23 @@ export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1,
     if (rot) ctx.rotate(rot * facing);
     if (facing < 0) ctx.scale(-1, 1);
     const dx = -w / 2, dy = rot ? -hgt / 2 : -hgt;
-    ctx.drawImage(img, dx, dy, w, hgt);
     if (tint && tint.a > 0) {
-      ctx.globalCompositeOperation = 'source-atop';
-      ctx.globalAlpha = alpha * tint.a;
-      ctx.fillStyle = tint.color;
-      ctx.fillRect(dx, dy, w, hgt);
+      const tw = Math.max(1, Math.ceil(w)), th = Math.max(1, Math.ceil(hgt));
+      if (!tintCanvas) tintCanvas = document.createElement('canvas');
+      if (tintCanvas.width < tw) tintCanvas.width = tw;
+      if (tintCanvas.height < th) tintCanvas.height = th;
+      const tc = tintCanvas.getContext('2d');
+      tc.clearRect(0, 0, tw, th);
+      tc.drawImage(img, 0, 0, w, hgt);
+      tc.globalCompositeOperation = 'source-atop';
+      tc.globalAlpha = tint.a;
+      tc.fillStyle = tint.color;
+      tc.fillRect(0, 0, tw, th);
+      tc.globalCompositeOperation = 'source-over';
+      tc.globalAlpha = 1;
+      ctx.drawImage(tintCanvas, 0, 0, tw, th, dx, dy, tw, th);
+    } else {
+      ctx.drawImage(img, dx, dy, w, hgt);
     }
   } else {                       // fallback box if asset missing
     ctx.fillStyle = '#e055e0';

@@ -3,7 +3,7 @@
 // Two-frame sets flip between frames; single-frame scenes get a subtle
 // breathing bob so the background always feels alive.
 
-import { GROUND_Y, drawSprite } from './engine.js';
+import { GROUND_Y, drawSprite, images } from './engine.js';
 
 // frames per animation + draw height (player draws at ~86px)
 export const NPC_ANIMS = {
@@ -31,7 +31,9 @@ export const NPC_ANIMS = {
   },
   sevilla: {
     stall: { frames: 1, h: 120 },
-    idle:  { frames: 2, h: 88 }, juice: { frames: 2, h: 88 },
+    // juice is single-frame: the sheet's second juice pose dropped the
+    // table+juicer, so animating the pair made the table pop in and out
+    idle:  { frames: 2, h: 88 }, juice: { frames: 1, h: 88 },
     serve: { frames: 2, h: 88 }, wave:  { frames: 2, h: 88 },
   },
   lima: {
@@ -75,6 +77,14 @@ export function drawNpcs(ctx, level, camX, viewW) {
     // behind the action and never read as a threat. Stalls stay a touch
     // brighter since they're obviously scenery, not people.
     const isStall = n.set === 'stall';
+    // Character frames were sliced from one sheet and normalized so the
+    // tallest pose is 400px; honor each frame's native height so poses
+    // keep a consistent body size (a bent-over pose must draw shorter,
+    // not stretch up to the standing height).
+    if (!isStall) {
+      const img = images[`npc_${level.id}_${n.set}_${frame}`];
+      if (img) h *= img.height / 400;
+    }
     drawSprite(ctx, `npc_${level.id}_${n.set}_${frame}`,
                n.x, GROUND_Y + 2, h, n.face || 1,
                isStall ? 0.94 : 0.86, 0,
