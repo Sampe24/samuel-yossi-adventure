@@ -57,6 +57,24 @@ export function npcAssetNames() {
   return names;
 }
 
+// Landmark scenery (level.decor): big background set pieces like Granada's
+// Plaza del Triunfo monument or the Paseo del Salón kiosk. Drawn behind the
+// NPCs with a light depth wash so they read as backdrop, not obstacles.
+export function drawDecor(ctx, level, camX, viewW) {
+  for (const d of level.decor || []) {
+    if (d.x < camX - 400 || d.x > camX + viewW + 400) continue;
+    drawSprite(ctx, d.img, d.x, GROUND_Y + 2, d.h, d.face || 1, 0.96, 0,
+               { color: '#26365f', a: 0.10 });
+  }
+}
+
+export function decorAssetNames(levels) {
+  const names = new Set();
+  for (const lvl of levels)
+    for (const d of lvl.decor || []) names.add(d.img);
+  return [...names];
+}
+
 export function drawNpcs(ctx, level, camX, viewW) {
   const sets = NPC_ANIMS[level.id];
   if (!sets || !level.npcs) return;

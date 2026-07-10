@@ -1,7 +1,8 @@
 // Samuel & Yossi: A 2D Adventure — main game loop and state machine.
 
 import { W, H, GROUND_Y, loadImages, images, camera, updateCamera, clearPressed,
-         pressed, keys, input, overlap, drawSprite, drawBackground, drawGround,
+         pressed, keys, input, overlap, drawSprite, drawBackground,
+         drawSegmentedBackground, drawGround,
          drawPlatforms, drawLadders, clamp } from './engine.js';
 import { makePlayer, updatePlayer, updateCompanion, hurtPlayer, drawPlayer,
          playerSprite, doSlash, doShoot, doNade, doChargedShot, MAX_HP,
@@ -12,8 +13,13 @@ import { LEVELS } from './levels.js';
 import { playSong, stopMusic, sfx, unlockAudio } from './audio.js';
 import { net, hostGame, joinGame, send, playerPacket, worldPacket, closeNet } from './net.js';
 import { makeEnding, updateEnding, drawEnding } from './ending.js';
-import { npcAssetNames, drawNpcs } from './npcs.js';
+import { npcAssetNames, drawNpcs, drawDecor, decorAssetNames } from './npcs.js';
 import { makeDog, updateDog, drawDog, DOG_FRAMES } from './dog.js';
+import { loadProgress, markCleared } from './progress.js';
+import { makeWorldMap, updateWorldMap, drawWorldMap } from './worldmap.js';
+import { makeDance, updateDance, drawDance } from './dance.js';
+import { makeDuel, updateDuel, drawDuel, restartDuel } from './duel.js';
+import { makeMemoryLane, updateMemoryLane, drawMemoryLane } from './memorylane.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -31,6 +37,12 @@ const ASSET_LIST = [
   'tile_granada', 'tile_cusco', 'tile_sweden',
   'tile_madrid', 'tile_lima', 'tile_jonkoping', 'tile_sevilla',
   ...npcAssetNames(), ...DOG_FRAMES,
+  ...decorAssetNames(LEVELS),
+  ...LEVELS.flatMap(l => l.bgSegments || []),
+  'bg_mem_meet', 'bg_mem_navidad', 'bg_mem_pascua', 'bg_mem_parque',
+  ...['samuel', 'yossi'].flatMap(w =>
+    ['idle', 'up', 'left', 'down', 'right', 'miss', 'win', 'spin']
+      .map(p => `${w}_dance_${p}`)),
 ];
 
 // if a fancy pose is missing, fall back to a basic one (never pink boxes)
@@ -40,14 +52,21 @@ const SPRITE_FALLBACKS = {
   guard: 'crouch', parry: 'slash', charge: 'shoot',
 };
 function applyFallbacks() {
-  for (const w of ['samuel', 'yossi'])
+  for (const w of ['samuel', 'yossi']) {
     for (const [pose, fb] of Object.entries(SPRITE_FALLBACKS))
       if (!images[`${w}_${pose}`]) images[`${w}_${pose}`] = images[`${w}_${fb}`];
+    // dance poses degrade gracefully to regular hero sprites
+    const danceFb = { idle: 'idle', up: 'victory', left: 'run1', down: 'crouch',
+                      right: 'run2', miss: 'jump', win: 'victory', spin: 'spin' };
+    for (const [pose, fb] of Object.entries(danceFb))
+      if (!images[`${w}_dance_${pose}`])
+        images[`${w}_dance_${pose}`] = images[`${w}_${fb}`];
+  }
 }
 
 // ---------------- game state ----------------
 const game = {
-  phase: 'title',        // title|play|bossintro|boss|clear|gameover|ending
+  phase: 'title',        // title|map|play|bossintro|boss|clear|gameover|ending|dance|duel
   levelIdx: 0, level: LEVELS[0],
   me: null, other: null, players: [],
   enemies: [], bullets: [], nades: [], meleeHits: [], pickups: [], particles: [],
@@ -58,6 +77,9 @@ const game = {
   popups: [],                   // floating combat/reward text
   lives: 3, checkpointHit: false, displayScore: 0,
   skillBanner: null,            // {text, t} — level-up skill unlock banner
+  progress: loadProgress(),     // unlocked levels + minigames (localStorage)
+  map: null, dance: null, duel: null,
+  seenLandmarks: {},            // decor labels already announced this level
 };
 
 function addPopup(x, y, text, color = '#ffe9a8', big = false) {
@@ -81,7 +103,7 @@ for (const [id, who] of [['pickSamuel', 'samuel'], ['pickYossi', 'yossi']]) {
 
 document.getElementById('btnSolo').onclick = () => {
   unlockAudio(); closeNet(); game.isHost = true;
-  startLevel(0, true);
+  enterMap();
 };
 document.getElementById('btnHost').onclick = () => {
   unlockAudio(); closeNet(); game.isHost = true;
@@ -114,8 +136,22 @@ function showMenu(show) { menu.style.display = show ? 'block' : 'none'; }
 showMenu(true);
 
 // ---------------- level setup ----------------
+// World map hub (solo journeys only — online co-op keeps the classic
+// level-after-level flow so nothing changes for a connected partner).
+function enterMap(selectIdx) {
+  stopMusic();
+  game.phase = 'map';
+  game.map = makeWorldMap(game.progress,
+                          selectIdx ?? Math.min(game.progress.unlocked - 1,
+                                                LEVELS.length - 1));
+  game.dance = null; game.duel = null; game.boss = null;
+  showMenu(false);
+  playSong('title');
+}
+
 function startLevel(idx, solo) {
-  if (game.phase === 'title' || game.phase === 'gameover') game.lives = 3;
+  if (game.phase === 'title' || game.phase === 'gameover' ||
+      game.phase === 'map') game.lives = 3;
   game.levelIdx = idx;
   game.level = LEVELS[idx];
   game.phase = 'play';
@@ -123,9 +159,13 @@ function startLevel(idx, solo) {
   game.enemies = []; game.bullets = []; game.nades = [];
   game.meleeHits = []; game.particles = []; game.popups = [];
   game.checkpointHit = false; game.freeze = 0; game.skillBanner = null;
+  game.seenLandmarks = {};
   camera.x = 0;
 
-  const keep = game.me ? { score: game.me.score, xp: game.me.xp, level: game.me.level } : null;
+  // carry XP/score across levels — from the live hero, else the save file
+  const keep = game.me
+    ? { score: game.me.score, xp: game.me.xp, level: game.me.level }
+    : game.progress.hero;
   game.me = makePlayer(game.myWho, 100);
   if (keep) Object.assign(game.me, keep);
 
@@ -176,6 +216,7 @@ function levelCleared() {
   game.clearT = 3.4;
   sfx.victory();
   stopMusic();
+  markCleared(game.progress, game.levelIdx, LEVELS[game.levelIdx].id, game.me);
 }
 
 window.debugEnding = () => startEnding();
@@ -494,6 +535,7 @@ function runSmokeTest() {
   let ticks = 0;
   const iv = setInterval(() => {
     ticks++;
+    if (game.phase === 'map') pressed['enter'] = true;   // launch selected level
     pressed['j'] = true; pressed['w'] = ticks % 3 === 0; pressed['l'] = ticks % 5 === 0;
     pressed['k'] = ticks % 2 === 0;                    // tap-fire (charged shot at LV2+)
     keys['s'] = ticks % 7 === 3;                       // exercise roll/crouch too
@@ -533,6 +575,11 @@ function frame(now) {
   if (!assetsReady) { drawLoading(); return; }
 
   if (pressed['p'] && ['play', 'boss'].includes(game.phase)) game.paused = !game.paused;
+  // quit to the world map from pause (solo journeys only)
+  if (game.paused && pressed['m'] && net.role === 'solo') {
+    game.paused = false;
+    enterMap(game.levelIdx);
+  }
 
   if (!game.paused) update(dt);
   render();
@@ -561,6 +608,38 @@ function update(dt) {
   switch (game.phase) {
     case 'title': break;
 
+    case 'map': {
+      const act = updateWorldMap(game.map, dt);
+      if (act) {
+        if (act.type === 'level') startLevel(act.idx, true);
+        else if (act.type === 'dance') { game.phase = 'dance'; game.dance = makeDance(game); }
+        else if (act.type === 'duel')  { game.phase = 'duel';  game.duel = makeDuel(game); }
+        else if (act.type === 'memory') { game.phase = 'memory'; game.memory = makeMemoryLane(game); camera.x = 0; }
+      }
+      break;
+    }
+
+    case 'dance':
+      updateDance(game.dance, dt);
+      if (game.dance.done) {
+        if (pressed['enter']) enterMap(LEVELS.length);        // dance node
+        else if (pressed['r']) game.dance = makeDance(game);
+      }
+      break;
+
+    case 'duel':
+      updateDuel(game.duel, dt);
+      if (game.duel.winner) {
+        if (pressed['enter']) enterMap(LEVELS.length + 1);    // duel node
+        else if (pressed['r']) restartDuel(game.duel, game);
+      }
+      break;
+
+    case 'memory':
+      if (updateMemoryLane(game.memory, dt) === 'exit')
+        enterMap(LEVELS.length + 2);                          // memory node
+      break;
+
     case 'play': {
       game.bannerT -= dt;
       const before = { a: game.me.action, ammo: game.me.ammo, nades: game.me.nades,
@@ -578,6 +657,15 @@ function update(dt) {
       updateCombat(dt);
       netUpdate(dt);
       updateCamera(game.me, game.level.length, dt);
+
+      // landmark sign popups as new streets fade in
+      for (const lm of game.level.landmarks || []) {
+        if (!game.seenLandmarks[lm.text] && Math.abs(game.me.x - lm.x) < 130) {
+          game.seenLandmarks[lm.text] = true;
+          addPopup(lm.x, GROUND_Y - 250, lm.text, '#ffd76a', true);
+          sfx.pickup();
+        }
+      }
 
       // checkpoint flag
       if (!game.checkpointHit && game.level.checkpoint &&
@@ -624,13 +712,15 @@ function update(dt) {
       netUpdate(dt);
       if (game.clearT <= 0 && game.isHost) {
         if (game.levelIdx === LEVELS.length - 1) startEnding();
-        else startLevel(game.levelIdx + 1, net.role === 'solo');
+        else if (net.role === 'solo') enterMap(game.levelIdx + 1);
+        else startLevel(game.levelIdx + 1, false);
       }
       break;
 
     case 'gameover':
       netUpdate(dt);
       if (pressed['enter'] && game.isHost) startLevel(game.levelIdx, net.role === 'solo');
+      if (pressed['m'] && net.role === 'solo') enterMap(game.levelIdx);
       break;
 
     case 'ending':
@@ -704,9 +794,16 @@ function render() {
     return;
   }
   if (game.phase === 'ending') { drawEnding(ctx, game.ending); return; }
+  if (game.phase === 'map')   { drawWorldMap(ctx, game.map, game.myWho); return; }
+  if (game.phase === 'dance') { drawDance(ctx, game.dance); return; }
+  if (game.phase === 'duel')  { drawDuel(ctx, game.duel, images); return; }
+  if (game.phase === 'memory') { drawMemoryLane(ctx, game.memory); return; }
 
-  drawBackground(ctx, game.level.bg, game.arena ? 0 : 0.35);
+  if (!game.arena && game.level.bgSegments)
+    drawSegmentedBackground(ctx, game.level.bgSegments, game.level.bgBounds);
+  else drawBackground(ctx, game.level.bg, game.arena ? 0 : 0.35);
   drawGround(ctx, game.level);
+  if (!game.arena) drawDecor(ctx, game.level, camera.x, W);
   if (!game.arena) drawNpcs(ctx, game.level, camera.x, W);
   drawPlatforms(ctx, game.level);
   drawLadders(ctx, game.level);
@@ -850,6 +947,10 @@ function render() {
     ctx.fillStyle = '#fff'; ctx.font = '18px monospace';
     ctx.fillText(game.isHost ? 'Press ENTER to retry the level' : 'Waiting for host to retry...',
                  W / 2, H / 2 + 30);
+    if (net.role === 'solo') {
+      ctx.fillStyle = '#8a86b8'; ctx.font = '14px monospace';
+      ctx.fillText('M — back to the world map', W / 2, H / 2 + 58);
+    }
   }
 
   if (game.paused) {
@@ -857,6 +958,10 @@ function render() {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#fff'; ctx.font = 'bold 40px monospace';
     ctx.fillText('PAUSED', W / 2, H / 2);
+    if (net.role === 'solo') {
+      ctx.fillStyle = '#8a86b8'; ctx.font = '15px monospace';
+      ctx.fillText('P — resume      M — world map', W / 2, H / 2 + 34);
+    }
   }
 }
 

@@ -182,6 +182,26 @@ S.jonkoping = { bpm: 140, sub: 2,
   drums:['k',null,'h',null,'s',null,'h',null,'k',null,'h',null,'s',null,'h','h',
          'k',null,'h',null,'s',null,'h',null,'k',null,'s',null,'s',null,'s','s'] };
 
+// DANCE — rumba fiesta in A minor for the dance battle: insistent kick,
+// off-beat claps, catchy call-and-response lead. Loop = 64 steps.
+S.dance = { bpm: 138, sub: 2,
+  lead: ['a4',null,'c5','a4','e5',null,'d5','c5','b4',null,'d5','b4','e5',null,null,null,
+         'a4',null,'c5','a4','e5',null,'g5','e5','f5','e5','d5','c5','b4',null,null,null,
+         'c5',null,'e5','c5','a5',null,'g5','e5','f5',null,'a5','f5','e5',null,null,null,
+         'd5','e5','f5','e5','d5','c5','b4','c5','a4',null,'e4','a4','a4',null,null,null],
+  harm: ['e4',null,null,null,'a4',null,null,null,'e4',null,null,null,'gs4',null,null,null,
+         'e4',null,null,null,'a4',null,null,null,'d4',null,null,null,'e4',null,null,null,
+         'a4',null,null,null,'c5',null,null,null,'d4',null,null,null,'e4',null,null,null,
+         'f4',null,null,null,'d4',null,null,null,'a3',null,null,null,null,null,null,null],
+  bass: ['a2',null,'a2','a2','e2',null,'a2',null,'a2',null,'a2','a2','e2',null,'e2',null,
+         'a2',null,'a2','a2','e2',null,'a2',null,'d2',null,'d2','d2','e2',null,'e2',null,
+         'a2',null,'a2','a2','c3',null,'c3',null,'d2',null,'d2','d2','e2',null,'e2',null,
+         'f2',null,'f2','f2','e2',null,'e2',null,'a2',null,'e2','e2','a2',null,null,null],
+  drums:['k',null,'h','h','s',null,'h',null,'k',null,'k','h','s',null,'h','h',
+         'k',null,'h','h','s',null,'h',null,'k',null,'k','h','s',null,'s','s',
+         'k',null,'h','h','s',null,'h',null,'k',null,'k','h','s',null,'h','h',
+         'k',null,'h','h','s',null,'h',null,'k','k','s',null,'s','s','s',null] };
+
 S.title = S.sweden;
 
 // ---------------- sequencer ----------------
@@ -196,6 +216,16 @@ export function playSong(name) {
 
 export function stopMusic() {
   if (current) { clearInterval(current.timer); current = null; }
+}
+
+// Beat clock for rhythm gameplay: where the sequencer is on the audio-context
+// timeline. timeOfStep(n) gives the exact audio time step n will sound.
+export function songClock() {
+  if (!current || !ac) return null;
+  const stepDur = 60 / current.song.bpm / current.song.sub;
+  const base = current.nextTime - current.step * stepDur;   // time of step 0
+  return { name: current.name, now: ac.currentTime, step: current.step,
+           stepDur, timeOfStep: n => base + n * stepDur };
 }
 
 function schedule() {
@@ -238,4 +268,8 @@ export const sfx = {
   chargeShot(full) { ctx(); blip('sawtooth', full ? 300 : 500, ac.currentTime, .25, .3, master, -200);
                      noiseBurst(ac.currentTime, .15, .25, 1500); },
   victory() { ctx(); [523, 659, 784, 1047].forEach((f, i) => blip('square', f, ac.currentTime + i * .13, .22, .2)); },
+  // dance-battle judgments
+  dPerfect(){ ctx(); blip('square', 1320, ac.currentTime, .06, .14); blip('square', 1760, ac.currentTime + .05, .08, .12); },
+  dGood()   { ctx(); blip('square', 880, ac.currentTime, .07, .12); },
+  dMiss()   { ctx(); blip('sawtooth', 160, ac.currentTime, .12, .12, master, -60); },
 };

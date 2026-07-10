@@ -135,6 +135,30 @@ export function drawSprite(ctx, name, cx, bottomY, hgt, facing = 1, alpha = 1,
   ctx.restore();
 }
 
+// Background that changes as you travel: `segs` is a list of image names,
+// `bounds` the world-x positions where one street hands over to the next.
+// Around each boundary the two neighbours crossfade, so walking the level
+// feels like moving through different parts of the city.
+export function drawSegmentedBackground(ctx, segs, bounds, parallax = 0.35,
+                                        fade = 320) {
+  const c = camera.x + W / 2;                    // view centre in world coords
+  let k = 0;
+  while (k < bounds.length && c > bounds[k]) k++;
+  drawBackground(ctx, segs[k], parallax);
+  // fading into the previous / next street?
+  if (k > 0 && c < bounds[k - 1] + fade) {
+    ctx.save();
+    ctx.globalAlpha = clamp((bounds[k - 1] + fade - c) / (fade * 2), 0, 1);
+    drawBackground(ctx, segs[k - 1], parallax);
+    ctx.restore();
+  } else if (k < bounds.length && c > bounds[k] - fade) {
+    ctx.save();
+    ctx.globalAlpha = clamp((c - (bounds[k] - fade)) / (fade * 2), 0, 1);
+    drawBackground(ctx, segs[k + 1], parallax);
+    ctx.restore();
+  }
+}
+
 export function drawBackground(ctx, name, parallax = 0.35, offsetY = 0) {
   const img = images[name];
   if (!img) { ctx.fillStyle = '#223'; ctx.fillRect(0, 0, W, H); return; }

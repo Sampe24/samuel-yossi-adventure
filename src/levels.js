@@ -6,6 +6,15 @@ export const LEVELS = [
     name: 'LEVEL 1 — GRANADA',
     subtitle: 'Fight through the old town to the Alhambra',
     bg: 'bg_granada', music: 'granada', tile: 'tile_granada',
+    // the backdrop itself changes as you cross the city: old town with the
+    // Alhambra -> Plaza del Triunfo -> Rio Genil promenade -> Paseo del Salon
+    bgSegments: ['bg_granada', 'bg_gr_triunfo', 'bg_gr_genil', 'bg_gr_salon'],
+    bgBounds: [1500, 2950, 4350],
+    landmarks: [
+      { x: 1650, text: 'PLAZA DEL TRIUNFO' },
+      { x: 3100, text: 'RÍO GENIL' },
+      { x: 4500, text: 'PASEO DEL SALÓN' },
+    ],
     length: 5600, checkpoint: 2900,
     groundTop: '#c9a06a', groundBottom: '#8a6437', platColor: '#b98d55',
     platforms: [
@@ -32,6 +41,14 @@ export const LEVELS = [
     ladders: [
       { x: 1560, y: 330, w: 26, h: 140 },
       { x: 3360, y: 330, w: 26, h: 140 },
+    ],
+    // blossoming trees as soft mid-ground props (landmarks themselves live
+    // in the background segments so the streets feel continuous)
+    decor: [
+      { img: 'deco_blossom', x: 660,  h: 175 },
+      { img: 'deco_blossom', x: 2350, h: 175, face: -1 },
+      { img: 'deco_blossom', x: 3900, h: 175 },
+      { img: 'deco_blossom', x: 5150, h: 175, face: -1 },
     ],
     // ambient townsfolk (Arabic teashop) drawn behind the action
     npcs: [
