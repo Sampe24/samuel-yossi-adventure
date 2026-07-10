@@ -10,7 +10,7 @@ export const LEVELS = [
     // Alhambra -> Tonito's park at the Triunfo -> Rio Genil -> Paseo del
     // Salon. Landmark names pop as each seam scrolls past (positions are
     // derived from the stitched image widths at runtime).
-    bgSegments: ['bg_granada', 'bg_mem_parque', 'bg_gr_genil', 'bg_gr_salon'],
+    bgSegments: ['bg_granada', 'bg_gr_triunfo', 'bg_gr_genil', 'bg_gr_salon'],
     landmarks: ['PLAZA DEL TRIUNFO', 'RÍO GENIL', 'PASEO DEL SALÓN'],
     length: 5600, checkpoint: 2900,
     groundTop: '#c9a06a', groundBottom: '#8a6437', platColor: '#b98d55',

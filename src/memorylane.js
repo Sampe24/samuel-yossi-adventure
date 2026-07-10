@@ -26,8 +26,8 @@ const SCENES = [
     title: 'OUR FIRST SEMANA SANTA',
     sub: 'candles, drums, and your hand in mine',
     tint: 'rgba(16,10,30,.22)', spark: '#ffd76a' },
-  { bg: 'bg_mem_parque',
-    title: "TONITO'S PARK — FUENTE DEL TRIUNFO",
+  { bg: 'bg_gr_triunfo',                     // same artwork as the Granada
+    title: "TONITO'S PARK — FUENTE DEL TRIUNFO",   // level: it IS the same place
     sub: 'resting by the water, taking care of our sleepy little friend',
     tint: 'rgba(255,240,180,.06)', spark: '#aee9ff' },
 ];

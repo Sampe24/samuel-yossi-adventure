@@ -39,7 +39,7 @@ const ASSET_LIST = [
   ...npcAssetNames(), ...DOG_FRAMES,
   ...decorAssetNames(LEVELS),
   ...LEVELS.flatMap(l => l.bgSegments || []),
-  'bg_mem_meet', 'bg_mem_navidad', 'bg_mem_pascua', 'bg_mem_parque',
+  'bg_mem_meet', 'bg_mem_navidad', 'bg_mem_pascua',
   ...['samuel', 'yossi'].flatMap(w =>
     ['idle', 'up', 'left', 'down', 'right', 'miss', 'win', 'spin']
       .map(p => `${w}_dance_${p}`)),
